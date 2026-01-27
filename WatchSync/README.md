@@ -19,6 +19,8 @@ Jellyfin plugin to automatically synchronize watch history between libraries of 
 
 See the [main repository README](../README.md) for installation via Jellyfin plugin repository.
 
+> **Warning:** It is recommended to backup your Jellyfin database before installing and using this plugin. The plugin modifies user watch data, and a backup ensures you can restore your data if needed.
+
 ## Configuration
 
 After installation, configure the plugin in: **Administration → Plugins → WatchSync**
