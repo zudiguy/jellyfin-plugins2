@@ -32,10 +32,6 @@ Automatically synchronizes watch history between libraries of different qualitie
 
 ---
 
-## For Developers
-
-Each plugin has its own folder with build instructions. See individual plugin READMEs.
-
 ### Requirements
 
 - Jellyfin 10.11.0 or higher
