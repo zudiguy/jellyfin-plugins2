@@ -1,0 +1,29 @@
+# Build outputs
+**/output/
+**/bin/
+**/obj/
+*.dll
+*.pdb
+*.nupkg
+*.zip
+
+# IDE
+.vs/
+.vscode/
+*.user
+*.suo
+.idea/
+
+# OS files
+.DS_Store
+Thumbs.db
+
+# Logs
+*.log
+
+# Internal notes and reviews (development)
+AGENTS.md
+GEMINI.md
+codexreview.md
+geminireview.md
+claudereview.md
