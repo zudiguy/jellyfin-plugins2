@@ -2,7 +2,9 @@
 
 Jellyfin plugin to automatically synchronize watch history between libraries of different qualities (4K/HD).
 
-![WatchSync Logo](Jellyfin.Plugin.WatchSync/WatchSync.png)
+<p align="center">
+    <img src="WatchSync/Jellyfin.Plugin.WatchSync/WatchSync.png" />
+</p>
 
 ## Features
 
