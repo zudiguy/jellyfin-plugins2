@@ -1,3 +1,4 @@
+
 # Jellyfin Plugins by Atilili
 
 A collection of plugins for Jellyfin media server.
@@ -16,7 +17,9 @@ A collection of plugins for Jellyfin media server.
 
 ### WatchSync
 
-![WatchSync](WatchSync/Jellyfin.Plugin.WatchSync/WatchSync.png)
+<p align="center">
+    <img src="WatchSync/Jellyfin.Plugin.WatchSync/WatchSync.png" />
+</p>
 
 Automatically synchronizes watch history between libraries of different qualities (4K/HD). When a movie is watched in 4K, the HD version is also marked as watched (and vice versa).
 
