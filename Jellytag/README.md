@@ -16,7 +16,9 @@ JellyTag automatically adds quality resolution badges (4K, 1080p, 720p, SD) to y
 
 ## Screenshots
 
-*Screenshots coming soon*
+<p align="center">
+    <img src=Jellytag/screenshot.png/>
+</p>
 
 ## Installation
 
