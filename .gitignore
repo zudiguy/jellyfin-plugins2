@@ -4,6 +4,7 @@
 **/obj/
 **/out/
 **/publish/
+**/publish_out/
 *.dll
 *.pdb
 *.nupkg

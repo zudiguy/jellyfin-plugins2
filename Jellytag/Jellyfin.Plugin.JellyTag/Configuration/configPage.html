@@ -1,0 +1,281 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8">
+    <title>JellyTag</title>
+</head>
+<body>
+    <div id="JellyTagConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <div data-role="content">
+            <div class="content-primary">
+                <form id="JellyTagConfigForm">
+                    <div class="sectionTitleContainer flex align-items-center">
+                        <h2 class="sectionTitle">JellyTag Configuration</h2>
+                    </div>
+
+                    <div class="verticalSection">
+                        <p>JellyTag adds quality badges (4K, 1080p, 720p, SD) to your media posters, thumbnails and backdrops.</p>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">General</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="Enabled" name="Enabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable JellyTag</span>
+                            </label>
+                            <div class="fieldDescription">Enable or disable the plugin globally.</div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Quality Badges to Display</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="Show4K" name="Show4K" type="checkbox" is="emby-checkbox" />
+                                <span>4K / UHD</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="Show1080p" name="Show1080p" type="checkbox" is="emby-checkbox" />
+                                <span>1080p</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="Show720p" name="Show720p" type="checkbox" is="emby-checkbox" />
+                                <span>720p</span>
+                            </label>
+                        </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="ShowSD" name="ShowSD" type="checkbox" is="emby-checkbox" />
+                                <span>SD</span>
+                            </label>
+                        </div>
+                    </div>
+
+                    <!-- Poster (Primary) Settings -->
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Posters (Primary)</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="PosterEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable badges on posters</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="PosterPosition">Position</label>
+                            <select id="PosterPosition" is="emby-select">
+                                <option value="TopLeft">Top Left</option>
+                                <option value="TopRight">Top Right</option>
+                                <option value="BottomLeft">Bottom Left</option>
+                                <option value="BottomRight">Bottom Right</option>
+                            </select>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="PosterSize">Size (%)</label>
+                            <input id="PosterSize" type="number" min="5" max="50" step="1" is="emby-input" />
+                            <div class="fieldDescription">Badge width as a percentage of image width (5-50%).</div>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="PosterMargin">Margin (px)</label>
+                            <input id="PosterMargin" type="number" min="0" max="100" step="1" is="emby-input" />
+                        </div>
+                    </div>
+
+                    <!-- Thumbnail (Thumb) Settings -->
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Thumbnails (Thumb)</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="ThumbEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable badges on thumbnails</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ThumbPosition">Position</label>
+                            <select id="ThumbPosition" is="emby-select">
+                                <option value="TopLeft">Top Left</option>
+                                <option value="TopRight">Top Right</option>
+                                <option value="BottomLeft">Bottom Left</option>
+                                <option value="BottomRight">Bottom Right</option>
+                            </select>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ThumbSize">Size (%)</label>
+                            <input id="ThumbSize" type="number" min="5" max="50" step="1" is="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="ThumbMargin">Margin (px)</label>
+                            <input id="ThumbMargin" type="number" min="0" max="100" step="1" is="emby-input" />
+                        </div>
+                    </div>
+
+                    <!-- Backdrop Settings -->
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Backdrops</h3>
+
+                        <div class="checkboxContainer checkboxContainer-withDescription">
+                            <label class="emby-checkbox-label">
+                                <input id="BackdropEnabled" type="checkbox" is="emby-checkbox" />
+                                <span>Enable badges on backdrops</span>
+                            </label>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="BackdropPosition">Position</label>
+                            <select id="BackdropPosition" is="emby-select">
+                                <option value="TopLeft">Top Left</option>
+                                <option value="TopRight">Top Right</option>
+                                <option value="BottomLeft">Bottom Left</option>
+                                <option value="BottomRight">Bottom Right</option>
+                            </select>
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="BackdropSize">Size (%)</label>
+                            <input id="BackdropSize" type="number" min="5" max="50" step="1" is="emby-input" />
+                        </div>
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="BackdropMargin">Margin (px)</label>
+                            <input id="BackdropMargin" type="number" min="0" max="100" step="1" is="emby-input" />
+                        </div>
+                    </div>
+
+                    <!-- Performance -->
+                    <div class="verticalSection">
+                        <h3 class="sectionTitle">Performance</h3>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="CacheDurationHours">Cache Duration (hours)</label>
+                            <input id="CacheDurationHours" type="number" min="1" max="720" step="1" is="emby-input" />
+                            <div class="fieldDescription">How long to cache modified images (1-720 hours).</div>
+                        </div>
+
+                        <div class="inputContainer">
+                            <label class="inputLabel inputLabelUnfocused" for="JpegQuality">JPEG Quality</label>
+                            <input id="JpegQuality" type="number" min="50" max="100" step="1" is="emby-input" />
+                            <div class="fieldDescription">Output image quality (50-100).</div>
+                        </div>
+
+                        <div class="verticalSection">
+                            <button id="ClearCache" type="button" is="emby-button" class="raised button-warning">
+                                <span>Clear Image Cache</span>
+                            </button>
+                            <div class="fieldDescription">Clear all cached images with badges. Use after changing settings.</div>
+                        </div>
+                    </div>
+
+                    <div class="verticalSection">
+                        <button is="emby-button" type="submit" class="raised button-submit block">
+                            <span>Save</span>
+                        </button>
+                    </div>
+                </form>
+            </div>
+        </div>
+
+        <script type="text/javascript">
+            var JellyTagConfig = {
+                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+            };
+
+            document.querySelector('#JellyTagConfigPage')
+                .addEventListener('pageshow', function () {
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function (config) {
+                        document.querySelector('#Enabled').checked = config.Enabled;
+                        document.querySelector('#Show4K').checked = config.Show4K;
+                        document.querySelector('#Show1080p').checked = config.Show1080p;
+                        document.querySelector('#Show720p').checked = config.Show720p;
+                        document.querySelector('#ShowSD').checked = config.ShowSD;
+
+                        // Poster
+                        document.querySelector('#PosterEnabled').checked = config.PosterSettings.Enabled;
+                        document.querySelector('#PosterPosition').value = config.PosterSettings.BadgePosition;
+                        document.querySelector('#PosterSize').value = config.PosterSettings.BadgeSizePercent;
+                        document.querySelector('#PosterMargin').value = config.PosterSettings.BadgeMargin;
+
+                        // Thumbnail
+                        document.querySelector('#ThumbEnabled').checked = config.ThumbnailSettings.Enabled;
+                        document.querySelector('#ThumbPosition').value = config.ThumbnailSettings.BadgePosition;
+                        document.querySelector('#ThumbSize').value = config.ThumbnailSettings.BadgeSizePercent;
+                        document.querySelector('#ThumbMargin').value = config.ThumbnailSettings.BadgeMargin;
+
+                        // Backdrop
+                        document.querySelector('#BackdropEnabled').checked = config.BackdropSettings.Enabled;
+                        document.querySelector('#BackdropPosition').value = config.BackdropSettings.BadgePosition;
+                        document.querySelector('#BackdropSize').value = config.BackdropSettings.BadgeSizePercent;
+                        document.querySelector('#BackdropMargin').value = config.BackdropSettings.BadgeMargin;
+
+                        document.querySelector('#CacheDurationHours').value = config.CacheDurationHours;
+                        document.querySelector('#JpegQuality').value = config.JpegQuality;
+
+                        Dashboard.hideLoadingMsg();
+                    });
+                });
+
+            document.querySelector('#JellyTagConfigForm')
+                .addEventListener('submit', function (e) {
+                    e.preventDefault();
+                    Dashboard.showLoadingMsg();
+                    ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function (config) {
+                        config.Enabled = document.querySelector('#Enabled').checked;
+                        config.Show4K = document.querySelector('#Show4K').checked;
+                        config.Show1080p = document.querySelector('#Show1080p').checked;
+                        config.Show720p = document.querySelector('#Show720p').checked;
+                        config.ShowSD = document.querySelector('#ShowSD').checked;
+
+                        config.PosterSettings = {
+                            Enabled: document.querySelector('#PosterEnabled').checked,
+                            BadgePosition: document.querySelector('#PosterPosition').value,
+                            BadgeSizePercent: parseInt(document.querySelector('#PosterSize').value, 10),
+                            BadgeMargin: parseInt(document.querySelector('#PosterMargin').value, 10)
+                        };
+                        config.ThumbnailSettings = {
+                            Enabled: document.querySelector('#ThumbEnabled').checked,
+                            BadgePosition: document.querySelector('#ThumbPosition').value,
+                            BadgeSizePercent: parseInt(document.querySelector('#ThumbSize').value, 10),
+                            BadgeMargin: parseInt(document.querySelector('#ThumbMargin').value, 10)
+                        };
+                        config.BackdropSettings = {
+                            Enabled: document.querySelector('#BackdropEnabled').checked,
+                            BadgePosition: document.querySelector('#BackdropPosition').value,
+                            BadgeSizePercent: parseInt(document.querySelector('#BackdropSize').value, 10),
+                            BadgeMargin: parseInt(document.querySelector('#BackdropMargin').value, 10)
+                        };
+
+                        config.CacheDurationHours = parseInt(document.querySelector('#CacheDurationHours').value, 10);
+                        config.JpegQuality = parseInt(document.querySelector('#JpegQuality').value, 10);
+
+                        ApiClient.updatePluginConfiguration(JellyTagConfig.pluginUniqueId, config).then(function () {
+                            Dashboard.processPluginConfigurationUpdateResult();
+                        });
+                    });
+                    return false;
+                });
+
+            document.querySelector('#ClearCache')
+                .addEventListener('click', function () {
+                    if (confirm('Are you sure you want to clear the image cache?')) {
+                        Dashboard.showLoadingMsg();
+                        ApiClient.ajax({
+                            type: 'POST',
+                            url: ApiClient.getUrl('JellyTag/ClearCache')
+                        }).then(function () {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('Cache cleared successfully.');
+                        }).catch(function () {
+                            Dashboard.hideLoadingMsg();
+                            Dashboard.alert('Failed to clear cache.');
+                        });
+                    }
+                });
+        </script>
+    </div>
+</body>
+</html>
