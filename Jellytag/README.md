@@ -3,7 +3,7 @@
 JellyTag automatically adds quality resolution badges (4K, 1080p, 720p, SD) to your media posters and thumbnails in Jellyfin.
 
 <p align="center">
-    <img src="[https://github.com/Atilil/jellyfin-plugins/raw/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png" />
+    <img src="https://github.com/Atilil/jellyfin-plugins/raw/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png" />
 </p>
 
 ## Features
