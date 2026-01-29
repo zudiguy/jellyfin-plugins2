@@ -2,6 +2,8 @@
 **/output/
 **/bin/
 **/obj/
+**/out/
+**/publish/
 *.dll
 *.pdb
 *.nupkg
@@ -10,9 +12,13 @@
 # IDE
 .vs/
 .vscode/
+.idea/
 *.user
 *.suo
-.idea/
+*.userprefs
+
+# NuGet
+**/packages/
 
 # OS files
 .DS_Store
@@ -21,9 +27,13 @@ Thumbs.db
 # Logs
 *.log
 
+# Test results
+**/TestResults/
+
+# Cache
+**/cache/
+
 # Internal notes and reviews (development)
 AGENTS.md
 GEMINI.md
-codexreview.md
-geminireview.md
-claudereview.md
+*-review.md
