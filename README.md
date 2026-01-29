@@ -37,6 +37,10 @@ Automatically synchronizes watch history between libraries of different qualitie
 
 ### JellyTag
 
+<p align="center">
+    <img src="Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png" />
+</p>
+
 Automatically adds quality resolution badges (4K, 1080p, 720p, SD) to your media posters and thumbnails. Badges are applied server-side via HTTP middleware, visible on all Jellyfin clients without configuration.
 
 **Features:**
