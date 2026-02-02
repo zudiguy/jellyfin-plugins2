@@ -6,275 +6,1036 @@
 </head>
 <body>
     <div id="JellyTagConfigPage" data-role="page" class="page type-interior pluginConfigurationPage" data-require="emby-input,emby-button,emby-select,emby-checkbox">
+        <style>
+            .jellytag-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 0 1em; }
+            .jellytag-section { border: 1px solid rgba(255,255,255,.12); border-radius: .4em; margin: 1em 0; overflow: hidden; }
+            .jellytag-section > summary { display: flex; align-items: center; gap: .6em; padding: .75em 1.2em; margin: 0; background: #00a4dc; color: #fff; cursor: pointer; font-size: 1.15em; font-weight: 600; letter-spacing: .02em; list-style: none; user-select: none; }
+            .jellytag-section > summary::-webkit-details-marker { display: none; }
+            .jellytag-section > summary::before { content: '\25B6'; font-size: .65em; transition: transform .2s ease; }
+            .jellytag-section[open] > summary::before { transform: rotate(90deg); }
+            .jellytag-section-body { padding: .8em 1.2em 1.2em; }
+            .jellytag-sub { border: 1px solid rgba(255,255,255,.1); border-radius: .3em; margin: 1em 0 .5em; overflow: hidden; }
+            .jellytag-sub > summary { display: flex; align-items: center; gap: .5em; padding: .55em 1em; background: rgba(255,255,255,.06); cursor: pointer; font-weight: 500; list-style: none; user-select: none; }
+            .jellytag-sub > summary::-webkit-details-marker { display: none; }
+            .jellytag-sub > summary::before { content: '\25B6'; font-size: .55em; transition: transform .2s ease; }
+            .jellytag-sub[open] > summary::before { transform: rotate(90deg); }
+            .jellytag-sub-body { padding: .5em 1em 1em; }
+            .jellytag-sub > summary { position: relative; padding-right: 4.5em; }
+            .panel-arrows { position: absolute; right: .6em; top: 50%; transform: translateY(-50%); display: flex; gap: .25em; }
+            .panel-arrows button { background: rgba(255,255,255,.15); border: none; color: #fff; width: 26px; height: 26px; border-radius: .2em; cursor: pointer; font-size: .85em; line-height: 26px; text-align: center; padding: 0; }
+            .panel-arrows button:hover { background: rgba(0,164,220,.6); }
+            .panel-arrows button:disabled { opacity: .3; cursor: default; }
+            .hidden { display: none !important; }
+            .jellytag-text-box { padding: .6em; border: 1px solid rgba(255,255,255,.08); border-radius: .3em; margin-top: .5em; }
+            .jellytag-rgba { display: flex; gap: .5em; align-items: center; }
+            .jellytag-rgba input[type="number"] { width: 80px; }
+            .badge-card { display: flex; flex-direction: column; align-items: center; border: 1px solid rgba(255,255,255,.15); border-radius: .4em; padding: .6em; cursor: pointer; transition: border-color .2s; position: relative; }
+            .badge-card:hover { border-color: #00a4dc; }
+            .badge-card.custom { border-color: #4caf50; }
+            .badge-card img { width: 80px; height: 80px; object-fit: contain; }
+            .badge-card .badge-label { margin-top: .4em; font-size: .85em; text-align: center; }
+            .badge-card .badge-reset { position: absolute; top: 4px; right: 4px; background: #c62828; color: #fff; border: none; border-radius: 50%; width: 20px; height: 20px; font-size: 12px; line-height: 20px; text-align: center; cursor: pointer; display: none; padding: 0; }
+            .badge-card.custom .badge-reset { display: block; }
+            .jellytag-config-layout { display: block; margin-right: 350px; }
+            .jellytag-config-layout > form { min-width: 0; }
+            .jellytag-preview-panel { position: fixed; top: 4.5em; width: 322px; max-height: calc(100vh - 5.5em); overflow-y: auto; border: 1px solid rgba(255,255,255,.12); border-radius: .4em; background: rgba(20,20,20,.95); padding: 1em; z-index: 50; }
+            .jellytag-preview-panel h3 { margin: 0 0 .8em; font-size: 1.1em; }
+            .jellytag-preview-panel .preview-search-wrap { position: relative; margin-bottom: 1em; }
+            .jellytag-preview-panel .preview-search-wrap input { width: 100%; box-sizing: border-box; }
+            .jellytag-preview-panel .preview-search-results { position: absolute; top: 100%; left: 0; right: 0; z-index: 100; background: #1c1c1e; border: 1px solid rgba(255,255,255,.2); border-radius: .3em; max-height: 250px; overflow-y: auto; display: none; }
+            .jellytag-preview-panel .preview-search-results .preview-search-item { padding: .5em .8em; cursor: pointer; font-size: .9em; }
+            .jellytag-preview-panel .preview-search-results .preview-search-item:hover { background: rgba(0,164,220,.3); }
+            .jellytag-preview-panel .preview-selected { font-size: .85em; color: #aaa; margin-bottom: .8em; }
+            .jellytag-preview-panel .preview-img { width: 100%; max-width: 300px; border-radius: .3em; margin-bottom: .8em; }
+            .jellytag-preview-panel .preview-img.poster { aspect-ratio: 2/3; object-fit: cover; max-height: 440px; }
+            .jellytag-preview-panel .preview-img.thumb { aspect-ratio: 16/9; object-fit: cover; }
+            .jellytag-preview-panel .preview-spinner { display: none; text-align: center; color: #aaa; padding: .5em 0; font-size: .9em; }
+            .jellytag-preview-panel .preview-error { display: none; color: #e57373; font-size: .85em; margin-top: .5em; }
+            @media (max-width: 1000px) {
+                .jellytag-config-layout { margin-right: 0; }
+                .jellytag-preview-panel { position: static; width: 100%; max-width: 100%; max-height: none; margin-bottom: 1em; }
+            }
+        </style>
         <div data-role="content">
             <div class="content-primary">
+                <div class="jellytag-config-layout">
                 <form id="JellyTagConfigForm">
                     <div class="sectionTitleContainer flex align-items-center">
                         <h2 class="sectionTitle">JellyTag Configuration</h2>
                     </div>
-
-                    <div class="verticalSection">
-                        <p>JellyTag adds quality badges (4K, 1080p, 720p, SD) to your media posters, thumbnails and backdrops.</p>
-                    </div>
-
                     <div class="verticalSection">
                         <h3 class="sectionTitle">General</h3>
-
                         <div class="checkboxContainer checkboxContainer-withDescription">
                             <label class="emby-checkbox-label">
-                                <input id="Enabled" name="Enabled" type="checkbox" is="emby-checkbox" />
+                                <input id="Enabled" type="checkbox" is="emby-checkbox" />
                                 <span>Enable JellyTag</span>
                             </label>
-                            <div class="fieldDescription">Enable or disable the plugin globally.</div>
                         </div>
                     </div>
 
-                    <div class="verticalSection">
-                        <h3 class="sectionTitle">Quality Badges to Display</h3>
+                    <!-- Libraries -->
+                    <details class="jellytag-section">
+                        <summary>Libraries</summary>
+                        <div class="jellytag-section-body">
+                            <div class="fieldDescription" style="margin-bottom:1em;">Uncheck a library to disable badge generation for its items.</div>
+                            <div id="LibraryCheckboxes"><em>Loading libraries...</em></div>
+                        </div>
+                    </details>
 
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="Show4K" name="Show4K" type="checkbox" is="emby-checkbox" />
-                                <span>4K / UHD</span>
-                            </label>
+                    <!-- Posters (Primary) -->
+                    <details class="jellytag-section" open>
+                        <summary>Posters (Primary)</summary>
+                        <div class="jellytag-section-body">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="PosterEnabled" type="checkbox" is="emby-checkbox" />
+                                    <span>Enable badges on posters</span>
+                                </label>
+                            </div>
+                            <div id="PosterPanels"></div>
                         </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="Show1080p" name="Show1080p" type="checkbox" is="emby-checkbox" />
-                                <span>1080p</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="Show720p" name="Show720p" type="checkbox" is="emby-checkbox" />
-                                <span>720p</span>
-                            </label>
-                        </div>
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="ShowSD" name="ShowSD" type="checkbox" is="emby-checkbox" />
-                                <span>SD</span>
-                            </label>
-                        </div>
-                    </div>
+                    </details>
 
-                    <!-- Poster (Primary) Settings -->
-                    <div class="verticalSection">
-                        <h3 class="sectionTitle">Posters (Primary)</h3>
+                    <!-- Thumbnails (Thumb) -->
+                    <details class="jellytag-section">
+                        <summary>Thumbnails (Thumb)</summary>
+                        <div class="jellytag-section-body">
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="ThumbnailSameAsPoster" type="checkbox" is="emby-checkbox" />
+                                    <span>Same as Poster</span>
+                                </label>
+                                <div class="fieldDescription">Use the same settings as Poster for thumbnails.</div>
+                            </div>
+                            <div id="ThumbSizeReductionWrap" class="inputContainer hidden">
+                                <label class="inputLabel inputLabelUnfocused" for="ThumbnailSizeReduction">Size reduction (percentage points)</label>
+                                <input id="ThumbnailSizeReduction" type="number" min="0" max="50" step="1" is="emby-input" />
+                                <div class="fieldDescription">Reduce badge size on thumbnails compared to posters (e.g. 10 means a 15% poster badge becomes 5% on thumbnails).</div>
+                            </div>
+                            <div id="ThumbFieldsContainer">
+                                <div class="checkboxContainer checkboxContainer-withDescription">
+                                    <label class="emby-checkbox-label">
+                                        <input id="ThumbEnabled" type="checkbox" is="emby-checkbox" />
+                                        <span>Enable badges on thumbnails</span>
+                                    </label>
+                                </div>
+                                <div id="ThumbPanels"></div>
+                            </div>
+                        </div>
+                    </details>
 
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="PosterEnabled" type="checkbox" is="emby-checkbox" />
-                                <span>Enable badges on posters</span>
-                            </label>
+                    <!-- Custom Badge Text -->
+                    <details class="jellytag-section">
+                        <summary>Custom Badge Text</summary>
+                        <div class="jellytag-section-body">
+                            <div class="fieldDescription" style="margin-bottom:1em;">Override the display text for any badge. Leave empty to use the default text.</div>
+                            <div class="jellytag-grid" id="CustomBadgeTextsGrid">
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_4k">4K</label><input id="cbt_4k" data-badge-key="4k" type="text" placeholder="4K" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_1080p">1080p</label><input id="cbt_1080p" data-badge-key="1080p" type="text" placeholder="1080p" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_720p">720p</label><input id="cbt_720p" data-badge-key="720p" type="text" placeholder="720p" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_sd">SD</label><input id="cbt_sd" data-badge-key="sd" type="text" placeholder="SD" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_hdr10">HDR10</label><input id="cbt_hdr10" data-badge-key="hdr10" type="text" placeholder="HDR10" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_hdr10plus">HDR10+</label><input id="cbt_hdr10plus" data-badge-key="hdr10plus" type="text" placeholder="HDR10+" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_dv">Dolby Vision</label><input id="cbt_dv" data-badge-key="dv" type="text" placeholder="DV" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_hlg">HLG</label><input id="cbt_hlg" data-badge-key="hlg" type="text" placeholder="HLG" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_hdr">HDR (generic)</label><input id="cbt_hdr" data-badge-key="hdr" type="text" placeholder="HDR" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_atmos">Dolby Atmos</label><input id="cbt_atmos" data-badge-key="atmos" type="text" placeholder="ATMOS" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_dtsx">DTS:X</label><input id="cbt_dtsx" data-badge-key="dtsx" type="text" placeholder="DTS:X" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_truehd">TrueHD</label><input id="cbt_truehd" data-badge-key="truehd" type="text" placeholder="TrueHD" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_dtshdma">DTS-HD MA</label><input id="cbt_dtshdma" data-badge-key="dtshdma" type="text" placeholder="DTS-HD MA" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_7_1">7.1</label><input id="cbt_7_1" data-badge-key="7.1" type="text" placeholder="7.1" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_5_1">5.1</label><input id="cbt_5_1" data-badge-key="5.1" type="text" placeholder="5.1" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_stereo">Stereo</label><input id="cbt_stereo" data-badge-key="stereo" type="text" placeholder="STEREO" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_3d">3D</label><input id="cbt_3d" data-badge-key="3d" type="text" placeholder="3D" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_h264">H.264</label><input id="cbt_h264" data-badge-key="h264" type="text" placeholder="H.264" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_hevc">HEVC</label><input id="cbt_hevc" data-badge-key="hevc" type="text" placeholder="HEVC" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_av1">AV1</label><input id="cbt_av1" data-badge-key="av1" type="text" placeholder="AV1" is="emby-input" /></div>
+                                <div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="cbt_vp9">VP9</label><input id="cbt_vp9" data-badge-key="vp9" type="text" placeholder="VP9" is="emby-input" /></div>
+                            </div>
                         </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PosterPosition">Position</label>
-                            <select id="PosterPosition" is="emby-select">
-                                <option value="TopLeft">Top Left</option>
-                                <option value="TopRight">Top Right</option>
-                                <option value="BottomLeft">Bottom Left</option>
-                                <option value="BottomRight">Bottom Right</option>
-                            </select>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PosterSize">Size (%)</label>
-                            <input id="PosterSize" type="number" min="5" max="50" step="1" is="emby-input" />
-                            <div class="fieldDescription">Badge width as a percentage of image width (5-50%).</div>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="PosterMargin">Margin (px)</label>
-                            <input id="PosterMargin" type="number" min="0" max="100" step="1" is="emby-input" />
-                        </div>
-                    </div>
+                    </details>
 
-                    <!-- Thumbnail (Thumb) Settings -->
-                    <div class="verticalSection">
-                        <h3 class="sectionTitle">Thumbnails (Thumb)</h3>
-
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="ThumbEnabled" type="checkbox" is="emby-checkbox" />
-                                <span>Enable badges on thumbnails</span>
-                            </label>
+                    <!-- Custom Badges -->
+                    <details class="jellytag-section">
+                        <summary>Custom Badges</summary>
+                        <div class="jellytag-section-body">
+                            <div class="fieldDescription" style="margin-bottom: 1em;">Click a badge to upload a custom replacement (SVG, PNG or JPEG). Click the reset button to revert to the default.</div>
+                            <div id="BadgeGallery" style="display:grid; grid-template-columns:repeat(auto-fill, minmax(120px, 1fr)); gap:12px;"></div>
+                            <input id="CustomBadgeFile" type="file" accept="image/svg+xml,image/png,image/jpeg" style="display:none;" />
                         </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="ThumbPosition">Position</label>
-                            <select id="ThumbPosition" is="emby-select">
-                                <option value="TopLeft">Top Left</option>
-                                <option value="TopRight">Top Right</option>
-                                <option value="BottomLeft">Bottom Left</option>
-                                <option value="BottomRight">Bottom Right</option>
-                            </select>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="ThumbSize">Size (%)</label>
-                            <input id="ThumbSize" type="number" min="5" max="50" step="1" is="emby-input" />
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="ThumbMargin">Margin (px)</label>
-                            <input id="ThumbMargin" type="number" min="0" max="100" step="1" is="emby-input" />
-                        </div>
-                    </div>
-
-                    <!-- Backdrop Settings -->
-                    <div class="verticalSection">
-                        <h3 class="sectionTitle">Backdrops</h3>
-
-                        <div class="checkboxContainer checkboxContainer-withDescription">
-                            <label class="emby-checkbox-label">
-                                <input id="BackdropEnabled" type="checkbox" is="emby-checkbox" />
-                                <span>Enable badges on backdrops</span>
-                            </label>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="BackdropPosition">Position</label>
-                            <select id="BackdropPosition" is="emby-select">
-                                <option value="TopLeft">Top Left</option>
-                                <option value="TopRight">Top Right</option>
-                                <option value="BottomLeft">Bottom Left</option>
-                                <option value="BottomRight">Bottom Right</option>
-                            </select>
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="BackdropSize">Size (%)</label>
-                            <input id="BackdropSize" type="number" min="5" max="50" step="1" is="emby-input" />
-                        </div>
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="BackdropMargin">Margin (px)</label>
-                            <input id="BackdropMargin" type="number" min="0" max="100" step="1" is="emby-input" />
-                        </div>
-                    </div>
+                    </details>
 
                     <!-- Performance -->
-                    <div class="verticalSection">
-                        <h3 class="sectionTitle">Performance</h3>
-
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="CacheDurationHours">Cache Duration (hours)</label>
-                            <input id="CacheDurationHours" type="number" min="1" max="720" step="1" is="emby-input" />
-                            <div class="fieldDescription">How long to cache modified images (1-720 hours).</div>
+                    <details class="jellytag-section">
+                        <summary>Performance</summary>
+                        <div class="jellytag-section-body">
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="CacheDurationHours">Cache Duration (hours)</label>
+                                <input id="CacheDurationHours" type="number" min="1" max="720" step="1" is="emby-input" />
+                            </div>
+                            <div class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="OutputFormat">Output Format</label>
+                                <select id="OutputFormat" is="emby-select">
+                                    <option value="Jpeg">JPEG</option>
+                                    <option value="WebP">WebP (experimental)</option>
+                                </select>
+                            </div>
+                            <div id="JpegQualityContainer" class="inputContainer">
+                                <label class="inputLabel inputLabelUnfocused" for="JpegQuality">JPEG Quality</label>
+                                <input id="JpegQuality" type="number" min="1" max="100" step="1" is="emby-input" />
+                            </div>
+                            <div id="WebPQualityContainer" class="inputContainer" style="display:none;">
+                                <label class="inputLabel inputLabelUnfocused" for="WebPQuality">WebP Quality</label>
+                                <input id="WebPQuality" type="number" min="1" max="100" step="1" is="emby-input" />
+                            </div>
+                            <div id="CacheStatsInfo" class="fieldDescription" style="margin-top:.5em;"></div>
                         </div>
+                    </details>
 
-                        <div class="inputContainer">
-                            <label class="inputLabel inputLabelUnfocused" for="JpegQuality">JPEG Quality</label>
-                            <input id="JpegQuality" type="number" min="50" max="100" step="1" is="emby-input" />
-                            <div class="fieldDescription">Output image quality (50-100).</div>
-                        </div>
-
-                        <div class="verticalSection">
-                            <button id="ClearCache" type="button" is="emby-button" class="raised button-warning">
-                                <span>Clear Image Cache</span>
-                            </button>
-                            <div class="fieldDescription">Clear all cached images with badges. Use after changing settings.</div>
-                        </div>
-                    </div>
-
-                    <div class="verticalSection">
-                        <button is="emby-button" type="submit" class="raised button-submit block">
-                            <span>Save</span>
-                        </button>
+                    <div class="verticalSection" style="margin-top:1em;">
+                        <button is="emby-button" type="submit" class="raised button-submit block" style="width:100%;"><span>Save</span></button>
+                        <button id="ClearCache" type="button" is="emby-button" class="raised button-warning block" style="width:100%; margin-top:.5em;"><span>Clear Image Cache</span></button>
+                        <button id="ExportConfig" type="button" is="emby-button" class="raised block" style="width:100%; margin-top:.5em;"><span>Export Config</span></button>
+                        <button id="ImportConfigBtn" type="button" is="emby-button" class="raised block" style="width:100%; margin-top:.5em;"><span>Import Config</span></button>
+                        <input id="ImportConfigFile" type="file" accept="application/json,.json" style="display:none;" />
+                        <button id="ResetAllSettings" type="button" is="emby-button" class="raised block" style="background:#888; width:100%; margin-top:.5em;"><span>Reset All Settings to Default</span></button>
                     </div>
                 </form>
+                <div class="jellytag-preview-panel">
+                    <h3>Live Preview</h3>
+                    <div class="preview-search-wrap">
+                        <input id="PreviewSearch" type="text" is="emby-input" placeholder="Search for a movie..." />
+                        <div id="PreviewSearchResults" class="preview-search-results"></div>
+                    </div>
+                    <div id="PreviewSelected" class="preview-selected"></div>
+                    <div id="PreviewSpinner" class="preview-spinner">Refreshing preview...</div>
+                    <img id="PreviewPoster" class="preview-img poster" style="display:none;" />
+                    <img id="PreviewThumb" class="preview-img thumb" style="display:none;" />
+                    <div id="PreviewError" class="preview-error"></div>
+                    <button id="RefreshPreview" type="button" is="emby-button" class="raised block" style="width:100%; margin-top:.5em;"><span>Refresh Preview</span></button>
+                </div>
+                </div>
             </div>
         </div>
 
         <script type="text/javascript">
-            var JellyTagConfig = {
-                pluginUniqueId: 'a1b2c3d4-e5f6-7890-abcd-ef1234567890'
+        var JellyTagConfig = { pluginUniqueId: 'f4a2e8c1-9b3d-4f7a-b6c5-2d8e1a3f9b04' };
+
+        // ===== Panel definitions =====
+        var PANEL_DEFS = {
+            Res: {
+                title: 'Resolution Badges',
+                badges: [{id:'4K',key:'4k',label:'4K / UHD'},{id:'1080p',key:'1080p',label:'1080p'},{id:'720p',key:'720p',label:'720p'},{id:'SD',key:'sd',label:'SD'}],
+                hasShowMode: true,
+                showModeOptions: [{v:'Highest',l:'Highest only'},{v:'All',l:'All'}]
+            },
+            Hdr: {
+                title: 'HDR / 3D Badges',
+                badges: [{id:'Hdr10',key:'hdr10',label:'HDR10'},{id:'Hdr10Plus',key:'hdr10plus',label:'HDR10+'},{id:'DV',key:'dv',label:'Dolby Vision'},{id:'HLG',key:'hlg',label:'HLG'},{id:'GenericHdr',key:'hdr',label:'Generic HDR'},{id:'3D',key:'3d',label:'3D'}],
+                hasShowMode: false
+            },
+            Codec: {
+                title: 'Codec Badges',
+                badges: [{id:'H264',key:'h264',label:'H.264 / AVC'},{id:'HEVC',key:'hevc',label:'HEVC / H.265'},{id:'AV1',key:'av1',label:'AV1'},{id:'VP9',key:'vp9',label:'VP9'}],
+                hasShowMode: false
+            },
+            Audio: {
+                title: 'Audio Badges',
+                badges: [{id:'Atmos',key:'atmos',label:'Dolby Atmos'},{id:'DtsX',key:'dtsx',label:'DTS:X'},{id:'TrueHD',key:'truehd',label:'Dolby TrueHD'},{id:'DtsHdMa',key:'dtshdma',label:'DTS-HD MA'},{id:'Channel',key:'channel',label:'Channel Layout (7.1/5.1/Stereo)'}],
+                hasShowMode: true,
+                showModeOptions: [{v:'Highest',l:'Highest only'},{v:'All',l:'All'}]
+            }
+        };
+
+        // ===== HTML Generation =====
+        function sel(id, label, options) {
+            var h = '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="' + id + '">' + label + '</label>';
+            h += '<select id="' + id + '" is="emby-select">';
+            options.forEach(function(o) { h += '<option value="' + o.v + '">' + o.l + '</option>'; });
+            h += '</select></div>';
+            return h;
+        }
+        function num(id, label, min, max, step) {
+            return '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="' + id + '">' + label + '</label>' +
+                '<input id="' + id + '" type="number" min="' + min + '" max="' + max + '" step="' + step + '" is="emby-input" /></div>';
+        }
+        function chk(id, label, desc) {
+            var h = '<div class="checkboxContainer checkboxContainer-withDescription"><label class="emby-checkbox-label">';
+            h += '<input id="' + id + '" type="checkbox" is="emby-checkbox" /><span>' + label + '</span></label>';
+            if (desc) h += '<div class="fieldDescription">' + desc + '</div>';
+            h += '</div>';
+            return h;
+        }
+        function colorAlpha(idColor, idOpacity, label) {
+            return '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused">' + label + '</label>' +
+                '<div class="jellytag-rgba"><input id="' + idColor + '" type="color" value="#000000" />' +
+                '<input id="' + idOpacity + '" type="number" min="0" max="255" step="1" is="emby-input" placeholder="Opacity" /></div></div>';
+        }
+        function colorOnly(id, label) {
+            return '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused">' + label + '</label>' +
+                '<input id="' + id + '" type="color" value="#FFFFFF" /></div>';
+        }
+
+        var POS_OPTS = [{v:'TopLeft',l:'Top Left'},{v:'TopRight',l:'Top Right'},{v:'BottomLeft',l:'Bottom Left'},{v:'BottomRight',l:'Bottom Right'}];
+        var LAYOUT_OPTS = [{v:'Vertical',l:'Vertical'},{v:'Horizontal',l:'Horizontal'}];
+
+        function arrowBtns() {
+            return '<span class="panel-arrows">' +
+                '<button type="button" class="panel-move-up" title="Move up" onclick="movePanelUp(this)">&#9650;</button>' +
+                '<button type="button" class="panel-move-down" title="Move down" onclick="movePanelDown(this)">&#9660;</button>' +
+                '</span>';
+        }
+
+        function panelHTML(p, panelId) {
+            var def = PANEL_DEFS[panelId];
+            var k = p + panelId;
+            var h = '<details class="jellytag-sub" data-panel-id="' + panelId + '"><summary>' + def.title + arrowBtns() + '</summary><div class="jellytag-sub-body">';
+            h += chk(k + 'Enabled', 'Enable');
+            h += '<div id="' + k + 'Settings">';
+
+            // Badges
+            h += '<div class="jellytag-grid">';
+            def.badges.forEach(function(b) { h += chk(k + b.id, b.label); });
+            h += '</div>';
+
+            h += sel(k + 'Position', 'Position', POS_OPTS);
+            if (def.hasShowMode) {
+                h += '<div id="' + k + 'ShowModeWrap">';
+                h += sel(k + 'ShowMode', 'Show', def.showModeOptions);
+                h += '</div>';
+            }
+            h += '<div id="' + k + 'LayoutWrap">' + sel(k + 'Layout', 'Layout', LAYOUT_OPTS) + '</div>';
+            h += '<div id="' + k + 'GapWrap">' + num(k + 'Gap', 'Gap between badges (%)', 0, 50, 1) + '</div>';
+            h += num(k + 'Size', 'Badge Size (%)', 0, 100, 1);
+            h += num(k + 'Margin', 'Margin (%)', 0, 20, 0.5);
+            h += sel(k + 'Style', 'Badge Style', [{v:'Image',l:'Image'},{v:'Text',l:'Text'}]);
+
+            // Text settings
+            h += '<div id="' + k + 'TextSettings" class="jellytag-text-box hidden">';
+            // Badge type selector
+            h += '<div class="inputContainer"><label class="inputLabel inputLabelUnfocused" for="' + k + 'BadgeSel">Apply to</label>';
+            h += '<select id="' + k + 'BadgeSel" is="emby-select"><option value="__global__">Global (all)</option>';
+            def.badges.forEach(function(b) { h += '<option value="' + b.key + '">' + b.label + '</option>'; });
+            h += '</select></div>';
+            h += colorAlpha(k + 'BgColor', k + 'BgOpacity', 'Background Color');
+            h += colorOnly(k + 'TextColor', 'Text Color');
+            h += num(k + 'CornerRadius', 'Corner Radius (%)', 0, 50, 1);
+            h += '</div>'; // TextSettings
+
+            h += '</div>'; // Settings
+            h += '</div></details>';
+            return h;
+        }
+
+        function langPanelHTML(p) {
+            var k = p + 'Lang';
+            var h = '<details class="jellytag-sub" data-panel-id="Lang"><summary>Language Badges' + arrowBtns() + '</summary><div class="jellytag-sub-body">';
+            h += chk(k + 'Enabled', 'Enable');
+            h += '<div id="' + k + 'Settings">';
+            h += sel(k + 'Position', 'Position', POS_OPTS);
+            h += sel(k + 'ShowMode', 'Show', [{v:'All',l:'All'},{v:'Highest',l:'Default Only'}]);
+            h += '<div id="' + k + 'LayoutWrap">' + sel(k + 'Layout', 'Layout', LAYOUT_OPTS) + '</div>';
+            h += '<div id="' + k + 'GapWrap">' + num(k + 'Gap', 'Gap between badges (%)', 0, 50, 1) + '</div>';
+            h += num(k + 'Size', 'Badge Size (%)', 0, 100, 1);
+            h += num(k + 'Margin', 'Margin (%)', 0, 20, 0.5);
+            h += sel(k + 'Style', 'Badge Style', [{v:'Image',l:'Image'},{v:'Text',l:'Text'}]);
+            h += '<div id="' + k + 'TextSettings" class="jellytag-text-box hidden">';
+            h += colorAlpha(k + 'BgColor', k + 'BgOpacity', 'Background Color');
+            h += colorOnly(k + 'TextColor', 'Text Color');
+            h += num(k + 'CornerRadius', 'Corner Radius (%)', 0, 50, 1);
+            h += '</div>';
+            // VOST
+            h += '<div style="margin-top:1em;">';
+            h += chk(k + 'Vost', 'Show VOST* indicator', 'Show VOST* badge for languages that have subtitles but no matching audio track.');
+            h += '<div id="' + k + 'VostSettings" class="jellytag-text-box hidden">';
+            h += colorAlpha(k + 'VostBgColor', k + 'VostBgOpacity', 'VOST Background Color');
+            h += colorOnly(k + 'VostTextColor', 'VOST Text Color');
+            h += num(k + 'VostCornerRadius', 'VOST Corner Radius (%)', 0, 50, 1);
+            h += '</div></div>';
+            h += '</div>'; // Settings
+            h += '</div></details>';
+            return h;
+        }
+
+        function generatePanels(prefix) {
+            return panelHTML(prefix, 'Res') + panelHTML(prefix, 'Hdr') + panelHTML(prefix, 'Codec') + panelHTML(prefix, 'Audio') + langPanelHTML(prefix);
+        }
+
+        // ===== Panel reordering =====
+        function movePanelUp(btn) {
+            var panel = btn.closest('.jellytag-sub');
+            var prev = panel.previousElementSibling;
+            if (prev && prev.classList.contains('jellytag-sub')) {
+                panel.parentNode.insertBefore(panel, prev);
+                updateArrowStates(panel.parentNode);
+            }
+        }
+        function movePanelDown(btn) {
+            var panel = btn.closest('.jellytag-sub');
+            var next = panel.nextElementSibling;
+            if (next && next.classList.contains('jellytag-sub')) {
+                panel.parentNode.insertBefore(next, panel);
+                updateArrowStates(panel.parentNode);
+            }
+        }
+        function updateArrowStates(container) {
+            var panels = container.querySelectorAll(':scope > .jellytag-sub');
+            panels.forEach(function(p, i) {
+                var up = p.querySelector('.panel-move-up');
+                var down = p.querySelector('.panel-move-down');
+                if (up) up.disabled = (i === 0);
+                if (down) down.disabled = (i === panels.length - 1);
+            });
+        }
+        function sortPanelsByOrder(container, orderMap) {
+            var panels = Array.from(container.querySelectorAll(':scope > .jellytag-sub'));
+            panels.sort(function(a, b) {
+                var oa = orderMap[a.getAttribute('data-panel-id')] || 0;
+                var ob = orderMap[b.getAttribute('data-panel-id')] || 0;
+                return oa - ob;
+            });
+            panels.forEach(function(p) { container.appendChild(p); });
+            updateArrowStates(container);
+        }
+        function getPanelOrder(container) {
+            var order = {};
+            container.querySelectorAll(':scope > .jellytag-sub').forEach(function(p, i) {
+                order[p.getAttribute('data-panel-id')] = i;
+            });
+            return order;
+        }
+
+        // ===== Override state management =====
+        var overrideStates = {};
+
+        function initOverrides(key, globalVals, typeOverrides) {
+            var s = { current: '__global__', values: {} };
+            s.values['__global__'] = {
+                bgColor: globalVals.TextBgColor || '#000000',
+                bgOpacity: globalVals.TextBgOpacity != null ? globalVals.TextBgOpacity : 180,
+                textColor: globalVals.TextColor || '#FFFFFF',
+                cornerRadius: globalVals.TextCornerRadius != null ? globalVals.TextCornerRadius : 25
             };
+            (typeOverrides || []).forEach(function(o) {
+                var bk = o.BadgeKey || o.badgeKey;
+                if (bk) {
+                    s.values[bk] = {
+                        bgColor: o.BgColor || o.bgColor || null,
+                        bgOpacity: o.BgOpacity != null ? o.BgOpacity : (o.bgOpacity != null ? o.bgOpacity : null),
+                        textColor: o.TextColor || o.textColor || null,
+                        cornerRadius: o.CornerRadius != null ? o.CornerRadius : (o.cornerRadius != null ? o.cornerRadius : null)
+                    };
+                }
+            });
+            overrideStates[key] = s;
+        }
 
-            document.querySelector('#JellyTagConfigPage')
-                .addEventListener('pageshow', function () {
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function (config) {
-                        document.querySelector('#Enabled').checked = config.Enabled;
-                        document.querySelector('#Show4K').checked = config.Show4K;
-                        document.querySelector('#Show1080p').checked = config.Show1080p;
-                        document.querySelector('#Show720p').checked = config.Show720p;
-                        document.querySelector('#ShowSD').checked = config.ShowSD;
+        function saveCurrentOverride(key) {
+            var s = overrideStates[key]; if (!s) return;
+            var bgc = document.querySelector('#' + key + 'BgColor');
+            if (!bgc) return;
+            var vals = {
+                bgColor: bgc.value,
+                bgOpacity: parseInt(document.querySelector('#' + key + 'BgOpacity').value, 10),
+                textColor: document.querySelector('#' + key + 'TextColor').value,
+                cornerRadius: parseInt(document.querySelector('#' + key + 'CornerRadius').value, 10)
+            };
+            if (s.current === '__global__') {
+                s.values['__global__'] = vals;
+            } else {
+                var g = s.values['__global__'];
+                if (vals.bgColor !== g.bgColor || vals.bgOpacity !== g.bgOpacity || vals.textColor !== g.textColor || vals.cornerRadius !== g.cornerRadius) {
+                    s.values[s.current] = vals;
+                } else {
+                    delete s.values[s.current];
+                }
+            }
+        }
 
-                        // Poster
-                        document.querySelector('#PosterEnabled').checked = config.PosterSettings.Enabled;
-                        document.querySelector('#PosterPosition').value = config.PosterSettings.BadgePosition;
-                        document.querySelector('#PosterSize').value = config.PosterSettings.BadgeSizePercent;
-                        document.querySelector('#PosterMargin').value = config.PosterSettings.BadgeMargin;
+        function loadOverrideValues(key, badgeKey) {
+            var s = overrideStates[key]; if (!s) return;
+            saveCurrentOverride(key);
+            s.current = badgeKey;
+            var v = s.values[badgeKey] || s.values['__global__'];
+            document.querySelector('#' + key + 'BgColor').value = v.bgColor || '#000000';
+            document.querySelector('#' + key + 'BgOpacity').value = v.bgOpacity != null ? v.bgOpacity : 180;
+            document.querySelector('#' + key + 'TextColor').value = v.textColor || '#FFFFFF';
+            document.querySelector('#' + key + 'CornerRadius').value = v.cornerRadius != null ? v.cornerRadius : 25;
+        }
 
-                        // Thumbnail
-                        document.querySelector('#ThumbEnabled').checked = config.ThumbnailSettings.Enabled;
-                        document.querySelector('#ThumbPosition').value = config.ThumbnailSettings.BadgePosition;
-                        document.querySelector('#ThumbSize').value = config.ThumbnailSettings.BadgeSizePercent;
-                        document.querySelector('#ThumbMargin').value = config.ThumbnailSettings.BadgeMargin;
+        function collectOverrides(key) {
+            saveCurrentOverride(key);
+            var s = overrideStates[key]; if (!s) return { textBgColor: '#000000', textBgOpacity: 180, textColor: '#FFFFFF', textCornerRadius: 25, overrides: [] };
+            var g = s.values['__global__'];
+            var ov = [];
+            Object.keys(s.values).forEach(function(bk) {
+                if (bk === '__global__') return;
+                var v = s.values[bk];
+                ov.push({ BadgeKey: bk, BgColor: v.bgColor, BgOpacity: v.bgOpacity, TextColor: v.textColor, CornerRadius: v.cornerRadius });
+            });
+            return { textBgColor: g.bgColor, textBgOpacity: g.bgOpacity, textColor: g.textColor, textCornerRadius: g.cornerRadius, overrides: ov };
+        }
 
-                        // Backdrop
-                        document.querySelector('#BackdropEnabled').checked = config.BackdropSettings.Enabled;
-                        document.querySelector('#BackdropPosition').value = config.BackdropSettings.BadgePosition;
-                        document.querySelector('#BackdropSize').value = config.BackdropSettings.BadgeSizePercent;
-                        document.querySelector('#BackdropMargin').value = config.BackdropSettings.BadgeMargin;
+        // ===== Show/hide toggles =====
+        function setupStyleToggle(key) {
+            var styleEl = document.querySelector('#' + key + 'Style');
+            var textDiv = document.querySelector('#' + key + 'TextSettings');
+            if (!styleEl || !textDiv) return;
+            function toggle() { styleEl.value === 'Text' ? textDiv.classList.remove('hidden') : textDiv.classList.add('hidden'); }
+            styleEl.addEventListener('change', toggle);
+            toggle();
+        }
 
-                        document.querySelector('#CacheDurationHours').value = config.CacheDurationHours;
-                        document.querySelector('#JpegQuality').value = config.JpegQuality;
+        function setupEnableToggle(key) {
+            var enEl = document.querySelector('#' + key + 'Enabled');
+            var setDiv = document.querySelector('#' + key + 'Settings');
+            if (!enEl || !setDiv) return;
+            function toggle() { enEl.checked ? setDiv.classList.remove('hidden') : setDiv.classList.add('hidden'); }
+            enEl.addEventListener('change', toggle);
+            toggle();
+        }
 
-                        Dashboard.hideLoadingMsg();
-                    });
+        function setupBadgeSelToggle(key) {
+            var selEl = document.querySelector('#' + key + 'BadgeSel');
+            if (!selEl) return;
+            selEl.addEventListener('change', function() { loadOverrideValues(key, selEl.value); });
+        }
+
+        function setupLangShowModeToggle(prefix) {
+            var k = prefix + 'Lang';
+            var showEl = document.querySelector('#' + k + 'ShowMode');
+            var layoutWrap = document.querySelector('#' + k + 'LayoutWrap');
+            var gapWrap = document.querySelector('#' + k + 'GapWrap');
+            if (!showEl) return;
+            function toggle() {
+                var hide = showEl.value === 'Highest';
+                if (layoutWrap) layoutWrap.classList.toggle('hidden', hide);
+                if (gapWrap) gapWrap.classList.toggle('hidden', hide);
+            }
+            showEl.addEventListener('change', toggle);
+            toggle();
+        }
+
+        function setupVostToggle(prefix) {
+            var k = prefix + 'Lang';
+            var vostEl = document.querySelector('#' + k + 'Vost');
+            var vostDiv = document.querySelector('#' + k + 'VostSettings');
+            if (!vostEl || !vostDiv) return;
+            function toggle() { vostEl.checked ? vostDiv.classList.remove('hidden') : vostDiv.classList.add('hidden'); }
+            vostEl.addEventListener('change', toggle);
+            toggle();
+        }
+
+        function setupHdrCodecShowMode(prefix) {
+            var resEn = document.querySelector('#' + prefix + 'ResEnabled');
+            var resShow = document.querySelector('#' + prefix + 'ResShowMode');
+            if (!resEn || !resShow) return;
+            function update() {
+                var mode = resEn.checked ? resShow.value : 'All';
+                ['Hdr', 'Codec'].forEach(function(pid) {
+                    var el = document.querySelector('#' + prefix + pid + 'ShowMode');
+                    if (el) el.value = mode;
                 });
+            }
+            resEn.addEventListener('change', update);
+            resShow.addEventListener('change', update);
+        }
 
-            document.querySelector('#JellyTagConfigForm')
-                .addEventListener('submit', function (e) {
-                    e.preventDefault();
-                    Dashboard.showLoadingMsg();
-                    ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function (config) {
-                        config.Enabled = document.querySelector('#Enabled').checked;
-                        config.Show4K = document.querySelector('#Show4K').checked;
-                        config.Show1080p = document.querySelector('#Show1080p').checked;
-                        config.Show720p = document.querySelector('#Show720p').checked;
-                        config.ShowSD = document.querySelector('#ShowSD').checked;
+        function setupThumbShowHideLayout(prefix) {
+            if (prefix !== 'Thumb') return;
+            ['Res', 'Hdr', 'Codec'].forEach(function(pid) {
+                var showEl = document.querySelector('#' + prefix + pid + 'ShowMode');
+                if (!showEl && pid !== 'Res') return;
+                var effectiveShow = function() {
+                    if (pid === 'Res') return document.querySelector('#' + prefix + 'ResShowMode').value;
+                    var resEn = document.querySelector('#' + prefix + 'ResEnabled');
+                    var resShow = document.querySelector('#' + prefix + 'ResShowMode');
+                    return (resEn && resEn.checked) ? resShow.value : 'All';
+                };
+                function toggle() {
+                    var hide = effectiveShow() === 'Highest';
+                    var lw = document.querySelector('#' + prefix + pid + 'LayoutWrap');
+                    var gw = document.querySelector('#' + prefix + pid + 'GapWrap');
+                    if (lw) lw.classList.toggle('hidden', hide);
+                    if (gw) gw.classList.toggle('hidden', hide);
+                }
+                var resShowEl = document.querySelector('#' + prefix + 'ResShowMode');
+                var resEnEl = document.querySelector('#' + prefix + 'ResEnabled');
+                if (resShowEl) resShowEl.addEventListener('change', toggle);
+                if (resEnEl) resEnEl.addEventListener('change', toggle);
+                toggle();
+            });
+        }
 
-                        config.PosterSettings = {
-                            Enabled: document.querySelector('#PosterEnabled').checked,
-                            BadgePosition: document.querySelector('#PosterPosition').value,
-                            BadgeSizePercent: parseInt(document.querySelector('#PosterSize').value, 10),
-                            BadgeMargin: parseInt(document.querySelector('#PosterMargin').value, 10)
-                        };
-                        config.ThumbnailSettings = {
-                            Enabled: document.querySelector('#ThumbEnabled').checked,
-                            BadgePosition: document.querySelector('#ThumbPosition').value,
-                            BadgeSizePercent: parseInt(document.querySelector('#ThumbSize').value, 10),
-                            BadgeMargin: parseInt(document.querySelector('#ThumbMargin').value, 10)
-                        };
-                        config.BackdropSettings = {
-                            Enabled: document.querySelector('#BackdropEnabled').checked,
-                            BadgePosition: document.querySelector('#BackdropPosition').value,
-                            BadgeSizePercent: parseInt(document.querySelector('#BackdropSize').value, 10),
-                            BadgeMargin: parseInt(document.querySelector('#BackdropMargin').value, 10)
-                        };
+        function setupAllToggles(prefix) {
+            ['Res', 'Hdr', 'Codec', 'Audio'].forEach(function(pid) {
+                setupEnableToggle(prefix + pid);
+                setupStyleToggle(prefix + pid);
+                setupBadgeSelToggle(prefix + pid);
+            });
+            setupEnableToggle(prefix + 'Lang');
+            setupStyleToggle(prefix + 'Lang');
+            setupLangShowModeToggle(prefix);
+            setupVostToggle(prefix);
+            setupHdrCodecShowMode(prefix);
+            setupThumbShowHideLayout(prefix);
+        }
 
-                        config.CacheDurationHours = parseInt(document.querySelector('#CacheDurationHours').value, 10);
-                        config.JpegQuality = parseInt(document.querySelector('#JpegQuality').value, 10);
+        // ===== Config loading =====
+        function q(id) { return document.querySelector('#' + id); }
 
-                        ApiClient.updatePluginConfiguration(JellyTagConfig.pluginUniqueId, config).then(function () {
-                            Dashboard.processPluginConfigurationUpdateResult();
-                        });
-                    });
-                    return false;
-                });
+        function loadPanelConfig(prefix, panelId, pc) {
+            if (!pc) return;
+            var k = prefix + panelId;
+            q(k + 'Enabled').checked = pc.Enabled !== false;
+            q(k + 'Position').value = pc.Position || 'TopLeft';
+            if (pc.ShowMode && q(k + 'ShowMode')) q(k + 'ShowMode').value = pc.ShowMode;
+            q(k + 'Layout').value = pc.Layout || 'Vertical';
+            q(k + 'Gap').value = pc.GapPercent != null ? pc.GapPercent : 10;
+            q(k + 'Size').value = pc.SizePercent != null ? pc.SizePercent : 15;
+            q(k + 'Margin').value = pc.MarginPercent != null ? pc.MarginPercent : 2.5;
+            q(k + 'Style').value = pc.Style || 'Image';
 
-            document.querySelector('#ClearCache')
-                .addEventListener('click', function () {
-                    if (confirm('Are you sure you want to clear the image cache?')) {
-                        Dashboard.showLoadingMsg();
-                        ApiClient.ajax({
-                            type: 'POST',
-                            url: ApiClient.getUrl('JellyTag/ClearCache')
-                        }).then(function () {
-                            Dashboard.hideLoadingMsg();
-                            Dashboard.alert('Cache cleared successfully.');
-                        }).catch(function () {
-                            Dashboard.hideLoadingMsg();
-                            Dashboard.alert('Failed to clear cache.');
-                        });
+            // Badges
+            var en = pc.EnabledBadges || [];
+            var def = PANEL_DEFS[panelId];
+            if (def) {
+                def.badges.forEach(function(b) {
+                    var el = q(k + b.id);
+                    if (el) {
+                        if (b.key === 'channel') {
+                            el.checked = en.indexOf('7.1') >= 0 || en.indexOf('5.1') >= 0 || en.indexOf('stereo') >= 0;
+                        } else {
+                            el.checked = en.indexOf(b.key) >= 0;
+                        }
                     }
                 });
+            }
+
+            // Text override state
+            initOverrides(k, pc, pc.BadgeTypeOverrides || []);
+            var g = overrideStates[k].values['__global__'];
+            q(k + 'BgColor').value = g.bgColor;
+            q(k + 'BgOpacity').value = g.bgOpacity;
+            q(k + 'TextColor').value = g.textColor;
+            q(k + 'CornerRadius').value = g.cornerRadius;
+            if (q(k + 'BadgeSel')) q(k + 'BadgeSel').value = '__global__';
+        }
+
+        function loadLangConfig(prefix, lc, itc) {
+            if (!lc) return;
+            var k = prefix + 'Lang';
+            q(k + 'Enabled').checked = lc.Enabled !== false;
+            q(k + 'Position').value = lc.Position || 'TopLeft';
+            q(k + 'ShowMode').value = lc.ShowMode || 'All';
+            q(k + 'Layout').value = lc.Layout || 'Vertical';
+            q(k + 'Gap').value = lc.GapPercent != null ? lc.GapPercent : 10;
+            q(k + 'Size').value = lc.SizePercent != null ? lc.SizePercent : 15;
+            q(k + 'Margin').value = lc.MarginPercent != null ? lc.MarginPercent : 2.5;
+            q(k + 'Style').value = lc.Style || 'Image';
+            q(k + 'BgColor').value = lc.TextBgColor || '#000000';
+            q(k + 'BgOpacity').value = lc.TextBgOpacity != null ? lc.TextBgOpacity : 180;
+            q(k + 'TextColor').value = lc.TextColor || '#FFFFFF';
+            q(k + 'CornerRadius').value = lc.TextCornerRadius != null ? lc.TextCornerRadius : 25;
+            // VOST
+            q(k + 'Vost').checked = itc.ShowVostIndicator !== false;
+            q(k + 'VostBgColor').value = itc.VostBgColor || '#000000';
+            q(k + 'VostBgOpacity').value = itc.VostBgOpacity != null ? itc.VostBgOpacity : 0;
+            q(k + 'VostTextColor').value = itc.VostTextColor || '#FFFFFF';
+            q(k + 'VostCornerRadius').value = itc.VostCornerRadius != null ? itc.VostCornerRadius : 1;
+        }
+
+        function loadImageTypeConfig(prefix, itc) {
+            if (!itc) return;
+            q(prefix + 'Enabled').checked = itc.Enabled !== false;
+            loadPanelConfig(prefix, 'Res', itc.ResolutionPanel);
+            loadPanelConfig(prefix, 'Hdr', itc.HdrPanel);
+            loadPanelConfig(prefix, 'Codec', itc.CodecPanel);
+            loadPanelConfig(prefix, 'Audio', itc.AudioPanel);
+            loadLangConfig(prefix, itc.LanguagePanel, itc);
+            // Sort panels by Order
+            var orderMap = {
+                Res: (itc.ResolutionPanel || {}).Order || 0,
+                Hdr: (itc.HdrPanel || {}).Order || 0,
+                Codec: (itc.CodecPanel || {}).Order || 0,
+                Audio: (itc.AudioPanel || {}).Order || 0,
+                Lang: (itc.LanguagePanel || {}).Order || 0
+            };
+            var container = document.getElementById(prefix + 'Panels');
+            if (container) sortPanelsByOrder(container, orderMap);
+        }
+
+        // ===== Config saving =====
+        function collectPanelBadges(prefix, panelId) {
+            var def = PANEL_DEFS[panelId];
+            var k = prefix + panelId;
+            var badges = [];
+            def.badges.forEach(function(b) {
+                var el = q(k + b.id);
+                if (el && el.checked) {
+                    if (b.key === 'channel') {
+                        badges.push('7.1'); badges.push('5.1'); badges.push('stereo');
+                    } else {
+                        badges.push(b.key);
+                    }
+                }
+            });
+            return badges;
+        }
+
+        function collectPanelConfig(prefix, panelId, order) {
+            var k = prefix + panelId;
+            var ov = collectOverrides(k);
+            return {
+                Enabled: q(k + 'Enabled').checked,
+                Position: q(k + 'Position').value,
+                ShowMode: q(k + 'ShowMode') ? q(k + 'ShowMode').value : 'Highest',
+                Layout: q(k + 'Layout').value,
+                GapPercent: parseFloat(q(k + 'Gap').value) || 0,
+                SizePercent: parseInt(q(k + 'Size').value, 10) || 15,
+                MarginPercent: parseFloat(q(k + 'Margin').value) || 2.5,
+                Style: q(k + 'Style').value,
+                Order: order,
+                TextBgColor: ov.textBgColor,
+                TextBgOpacity: ov.textBgOpacity,
+                TextColor: ov.textColor,
+                TextCornerRadius: ov.textCornerRadius,
+                EnabledBadges: collectPanelBadges(prefix, panelId),
+                BadgeTypeOverrides: ov.overrides
+            };
+        }
+
+        function collectLangConfig(prefix) {
+            var k = prefix + 'Lang';
+            var container = document.getElementById(prefix + 'Panels');
+            var order = container ? getPanelOrder(container) : {Lang:4};
+            return {
+                Enabled: q(k + 'Enabled').checked,
+                Position: q(k + 'Position').value,
+                ShowMode: q(k + 'ShowMode').value,
+                Layout: q(k + 'Layout').value,
+                GapPercent: parseFloat(q(k + 'Gap').value) || 0,
+                SizePercent: parseInt(q(k + 'Size').value, 10) || 15,
+                MarginPercent: parseFloat(q(k + 'Margin').value) || 2.5,
+                Style: q(k + 'Style').value,
+                Order: order.Lang != null ? order.Lang : 4,
+                TextBgColor: q(k + 'BgColor').value,
+                TextBgOpacity: parseInt(q(k + 'BgOpacity').value, 10) || 0,
+                TextColor: q(k + 'TextColor').value,
+                TextCornerRadius: parseInt(q(k + 'CornerRadius').value, 10) || 0,
+                EnabledBadges: [],
+                BadgeTypeOverrides: []
+            };
+        }
+
+        function collectImageTypeConfig(prefix) {
+            var k = prefix + 'Lang';
+            var container = document.getElementById(prefix + 'Panels');
+            var order = container ? getPanelOrder(container) : {Res:0,Hdr:1,Codec:2,Audio:3,Lang:4};
+            return {
+                Enabled: q(prefix + 'Enabled').checked,
+                ResolutionPanel: collectPanelConfig(prefix, 'Res', order.Res || 0),
+                HdrPanel: collectPanelConfig(prefix, 'Hdr', order.Hdr || 0),
+                CodecPanel: collectPanelConfig(prefix, 'Codec', order.Codec || 0),
+                AudioPanel: collectPanelConfig(prefix, 'Audio', order.Audio || 0),
+                LanguagePanel: collectLangConfig(prefix),
+                ShowVostIndicator: q(k + 'Vost').checked,
+                VostBgColor: q(k + 'VostBgColor').value || null,
+                VostTextColor: q(k + 'VostTextColor').value || null,
+                VostBgOpacity: parseInt(q(k + 'VostBgOpacity').value, 10) || 0,
+                VostCornerRadius: parseInt(q(k + 'VostCornerRadius').value, 10) || 0
+            };
+        }
+
+        function collectConfigFromForm(config) {
+            config.Enabled = q('Enabled').checked;
+            config.ThumbnailSameAsPoster = q('ThumbnailSameAsPoster').checked;
+            config.ThumbnailSizeReduction = parseInt(q('ThumbnailSizeReduction').value, 10) || 0;
+            config.PosterConfig = collectImageTypeConfig('Poster');
+            config.ThumbnailConfig = collectImageTypeConfig('Thumb');
+            config.ExcludedLibraryIds = collectExcludedLibraries();
+
+            // Nullify legacy
+            config.PosterSettings = null;
+            config.ThumbnailSettings = null;
+            config.BackdropSettings = null;
+            config.Show4K = null; config.Show1080p = null; config.Show720p = null; config.ShowSD = null;
+            config.ShowHdr10 = null; config.ShowHdr10Plus = null; config.ShowDolbyVision = null;
+            config.ShowHlg = null; config.ShowGenericHdr = null; config.Show3D = null;
+            config.ShowH264 = null; config.ShowHevc = null; config.ShowAv1 = null; config.ShowVp9 = null;
+            config.ShowDolbyAtmos = null; config.ShowDtsX = null; config.ShowTrueHD = null;
+            config.ShowDtsHdMa = null; config.ShowChannelBadge = null;
+            config.LanguageBadgeMode = null; config.ShowSubtitleIndicator = null;
+
+            // Custom Badge Texts
+            var saveCbt = [];
+            document.querySelectorAll('#CustomBadgeTextsGrid input[data-badge-key]').forEach(function(el) {
+                var val = el.value.trim();
+                if (val) saveCbt.push({ Key: el.getAttribute('data-badge-key'), Text: val });
+            });
+            config.CustomBadgeTexts = saveCbt;
+
+            config.CacheDurationHours = parseInt(q('CacheDurationHours').value, 10);
+            config.OutputFormat = q('OutputFormat').value;
+            config.JpegQuality = parseInt(q('JpegQuality').value, 10);
+            config.WebPQuality = parseInt(q('WebPQuality').value, 10);
+            return config;
+        }
+
+        // ===== Utility =====
+        function toggleOutputQuality() {
+            var fmt = q('OutputFormat').value;
+            document.querySelector('#JpegQualityContainer').style.display = fmt === 'Jpeg' ? '' : 'none';
+            document.querySelector('#WebPQualityContainer').style.display = fmt === 'WebP' ? '' : 'none';
+        }
+
+        function toggleThumbSameAsPoster() {
+            var same = q('ThumbnailSameAsPoster').checked;
+            var c = document.querySelector('#ThumbFieldsContainer');
+            if (c) c.classList.toggle('hidden', same);
+            var r = document.querySelector('#ThumbSizeReductionWrap');
+            if (r) r.classList.toggle('hidden', !same);
+        }
+
+        // ===== Library filter =====
+        function loadLibraryCheckboxes(excludedIds) {
+            var container = document.querySelector('#LibraryCheckboxes');
+            var token = ApiClient.accessToken();
+            var headers = {}; if (token) headers['Authorization'] = 'MediaBrowser Token="' + token + '"';
+            fetch(ApiClient.getUrl('Library/VirtualFolders'), {headers:headers}).then(function(r){return r.json();}).then(function(folders) {
+                container.innerHTML = '';
+                folders.forEach(function(folder) {
+                    var folderId = folder.ItemId;
+                    var isExcluded = excludedIds.indexOf(folderId) >= 0;
+                    var div = document.createElement('div');
+                    div.className = 'checkboxContainer checkboxContainer-withDescription';
+                    div.innerHTML = '<label class="emby-checkbox-label">' +
+                        '<input type="checkbox" is="emby-checkbox" class="libCheckbox" data-library-id="' + folderId + '"' + (isExcluded ? '' : ' checked') + ' />' +
+                        '<span>' + folder.Name + '</span></label>';
+                    container.appendChild(div);
+                });
+                if (folders.length === 0) container.innerHTML = '<em>No libraries found.</em>';
+            }).catch(function(err) {
+                console.error('[JellyTag] Failed to load libraries:', err);
+                container.innerHTML = '<em>Failed to load libraries.</em>';
+            });
+        }
+
+        function collectExcludedLibraries() {
+            var excluded = [];
+            document.querySelectorAll('#LibraryCheckboxes .libCheckbox').forEach(function(cb) {
+                if (!cb.checked) excluded.push(cb.getAttribute('data-library-id'));
+            });
+            return excluded;
+        }
+
+        // ===== Badge Gallery =====
+        var allBadgeKeys = [
+            {key:'4k',label:'4K'},{key:'1080p',label:'1080p'},{key:'720p',label:'720p'},{key:'sd',label:'SD'},
+            {key:'hdr10',label:'HDR10'},{key:'hdr10plus',label:'HDR10+'},{key:'dv',label:'Dolby Vision'},{key:'hlg',label:'HLG'},
+            {key:'atmos',label:'Atmos'},{key:'dtsx',label:'DTS:X'},{key:'truehd',label:'TrueHD'},{key:'dtshdma',label:'DTS-HD MA'},
+            {key:'5.1',label:'5.1'},{key:'7.1',label:'7.1'},{key:'stereo',label:'Stereo'},
+            {key:'h264',label:'H.264'},{key:'hevc',label:'HEVC'},{key:'av1',label:'AV1'},{key:'vp9',label:'VP9'}
+        ];
+
+        function loadBadgeGallery() {
+            var url = ApiClient.getUrl('JellyTag/CustomBadges');
+            var token = ApiClient.accessToken();
+            var headers = {}; if (token) headers['Authorization'] = 'MediaBrowser Token="' + token + '"';
+            fetch(url, {headers:headers}).then(function(r){return r.json();}).then(function(customList) {
+                var gallery = document.querySelector('#BadgeGallery'); gallery.innerHTML = '';
+                allBadgeKeys.forEach(function(b) {
+                    var isCustom = customList.indexOf(b.key) >= 0;
+                    var card = document.createElement('div'); card.className = 'badge-card' + (isCustom ? ' custom' : '');
+                    card.setAttribute('data-badge-key', b.key);
+                    var img = document.createElement('img');
+                    var previewUrl = ApiClient.getUrl('JellyTag/BadgePreview/' + b.key);
+                    img.src = previewUrl + '?t=' + Date.now() + (token ? '&api_key=' + token : ''); img.alt = b.label;
+                    card.appendChild(img);
+                    var lbl = document.createElement('div'); lbl.className = 'badge-label';
+                    lbl.textContent = b.label + (isCustom ? ' (custom)' : ''); card.appendChild(lbl);
+                    if (isCustom) {
+                        var resetBtn = document.createElement('button'); resetBtn.className = 'badge-reset';
+                        resetBtn.textContent = '\u00D7'; resetBtn.title = 'Reset to default';
+                        resetBtn.addEventListener('click', function(ev) { ev.stopPropagation();
+                            if (confirm('Reset "' + b.label + '" badge to default?')) {
+                                Dashboard.showLoadingMsg();
+                                ApiClient.ajax({type:'DELETE',url:ApiClient.getUrl('JellyTag/CustomBadge/'+b.key)}).then(function(){Dashboard.hideLoadingMsg();loadBadgeGallery();});
+                            }
+                        }); card.appendChild(resetBtn);
+                    }
+                    card.addEventListener('click', function() {
+                        var fi = document.querySelector('#CustomBadgeFile'); fi.setAttribute('data-target-key', b.key); fi.click();
+                    });
+                    gallery.appendChild(card);
+                });
+            }).catch(function(err) { console.error('[JellyTag] Badge gallery error:', err); });
+        }
+
+        function loadCacheStats() {
+            var url = ApiClient.getUrl('JellyTag/CacheStats');
+            var token = ApiClient.accessToken(); var headers = {};
+            if (token) headers['Authorization'] = 'MediaBrowser Token="' + token + '"';
+            fetch(url, {headers:headers}).then(function(r){return r.json();}).then(function(stats) {
+                var el = document.querySelector('#CacheStatsInfo');
+                if (stats.FileCount > 0) {
+                    var oldest = stats.OldestEntry ? new Date(stats.OldestEntry).toLocaleString() : 'N/A';
+                    el.textContent = stats.FileCount + ' files | ' + stats.TotalSizeMB + ' MB | oldest: ' + oldest;
+                } else { el.textContent = 'Cache is empty.'; }
+            }).catch(function(){document.querySelector('#CacheStatsInfo').textContent='';});
+        }
+
+        // ===== Page Show =====
+        document.querySelector('#JellyTagConfigPage').addEventListener('pageshow', function() {
+            // Generate panels
+            document.getElementById('PosterPanels').innerHTML = generatePanels('Poster');
+            document.getElementById('ThumbPanels').innerHTML = generatePanels('Thumb');
+
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function(config) {
+                q('Enabled').checked = config.Enabled;
+                q('ThumbnailSameAsPoster').checked = config.ThumbnailSameAsPoster === true;
+                q('ThumbnailSizeReduction').value = config.ThumbnailSizeReduction != null ? config.ThumbnailSizeReduction : 10;
+
+                loadImageTypeConfig('Poster', config.PosterConfig || {});
+                loadImageTypeConfig('Thumb', config.ThumbnailConfig || {});
+
+                // Custom Badge Texts
+                var cbtInputs = document.querySelectorAll('#CustomBadgeTextsGrid input[data-badge-key]');
+                var cbtList = config.CustomBadgeTexts || [];
+                var cbtMap = {};
+                cbtList.forEach(function(item) { cbtMap[item.Key || item.key] = item.Text || item.text; });
+                cbtInputs.forEach(function(el) { el.value = cbtMap[el.getAttribute('data-badge-key')] || ''; });
+
+                q('CacheDurationHours').value = config.CacheDurationHours;
+                q('OutputFormat').value = config.OutputFormat;
+                q('JpegQuality').value = config.JpegQuality;
+                q('WebPQuality').value = config.WebPQuality;
+                toggleOutputQuality();
+
+                // Setup all toggles
+                setupAllToggles('Poster');
+                setupAllToggles('Thumb');
+                q('ThumbnailSameAsPoster').addEventListener('change', toggleThumbSameAsPoster);
+                toggleThumbSameAsPoster();
+
+                loadLibraryCheckboxes(config.ExcludedLibraryIds || []);
+                Dashboard.hideLoadingMsg();
+            }).catch(function(err) {
+                console.error('[JellyTag] Failed to load config:', err);
+                Dashboard.hideLoadingMsg();
+                Dashboard.alert('Failed to load JellyTag configuration.');
+            });
+
+            loadBadgeGallery();
+            loadCacheStats();
+            toggleOutputQuality();
+
+            var panel = document.querySelector('.jellytag-preview-panel');
+            var form = document.querySelector('#JellyTagConfigForm');
+            if (panel && form) {
+                function positionPanel() {
+                    if (window.innerWidth <= 1000) { panel.style.left = ''; return; }
+                    var rect = form.getBoundingClientRect();
+                    panel.style.left = (rect.right + 16) + 'px';
+                }
+                positionPanel();
+                window.addEventListener('resize', positionPanel);
+            }
+        });
+
+        // ===== Form Submit =====
+        document.querySelector('#JellyTagConfigForm').addEventListener('submit', function(e) {
+            e.preventDefault();
+            Dashboard.showLoadingMsg();
+            ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function(config) {
+                collectConfigFromForm(config);
+                ApiClient.updatePluginConfiguration(JellyTagConfig.pluginUniqueId, config).then(function() {
+                    Dashboard.processPluginConfigurationUpdateResult();
+                });
+            });
+            return false;
+        });
+
+        // ===== Other Handlers =====
+        document.querySelector('#ClearCache').addEventListener('click', function() {
+            if (confirm('Are you sure you want to clear the image cache?')) {
+                Dashboard.showLoadingMsg();
+                ApiClient.ajax({type:'POST',url:ApiClient.getUrl('JellyTag/ClearCache')}).then(function(){
+                    Dashboard.hideLoadingMsg(); Dashboard.alert('Cache cleared successfully.'); loadCacheStats();
+                }).catch(function(){Dashboard.hideLoadingMsg();Dashboard.alert('Failed to clear cache.');});
+            }
+        });
+
+        document.querySelector('#CustomBadgeFile').addEventListener('change', function() {
+            var fi = this; var bk = fi.getAttribute('data-target-key');
+            if (!bk || !fi.files || fi.files.length === 0) return;
+            var fd = new FormData(); fd.append('file', fi.files[0]);
+            Dashboard.showLoadingMsg();
+            var xhr = new XMLHttpRequest();
+            xhr.open('POST', ApiClient.getUrl('JellyTag/CustomBadge/' + bk), true);
+            var token = ApiClient.accessToken();
+            if (token) xhr.setRequestHeader('Authorization', 'MediaBrowser Token="' + token + '"');
+            xhr.onload = function(){Dashboard.hideLoadingMsg();fi.value='';if(xhr.status===204){Dashboard.alert('Badge uploaded.');loadBadgeGallery();}else{Dashboard.alert('Upload failed.');}};
+            xhr.onerror = function(){Dashboard.hideLoadingMsg();fi.value='';Dashboard.alert('Upload failed.');};
+            xhr.send(fd);
+        });
+
+        document.querySelector('#ExportConfig').addEventListener('click', function() {
+            window.location = ApiClient.getUrl('JellyTag/ExportConfig') + '?api_key=' + ApiClient.accessToken();
+        });
+        document.querySelector('#ImportConfigBtn').addEventListener('click', function() { document.querySelector('#ImportConfigFile').click(); });
+        document.querySelector('#ImportConfigFile').addEventListener('change', function() {
+            var fi = this; var file = fi.files[0]; if (!file) return;
+            if (confirm('Import this configuration? Current settings will be overwritten.')) {
+                Dashboard.showLoadingMsg(); var fd = new FormData(); fd.append('file', file);
+                fetch(ApiClient.getUrl('JellyTag/ImportConfig'), {method:'POST',headers:{'Authorization':'MediaBrowser Token="'+ApiClient.accessToken()+'"'},body:fd}).then(function(r){
+                    Dashboard.hideLoadingMsg();fi.value='';if(r.ok){Dashboard.alert('Configuration imported. Reloading...');window.location.reload();}else{r.text().then(function(t){Dashboard.alert('Import failed: '+t);});}
+                }).catch(function(){Dashboard.hideLoadingMsg();fi.value='';Dashboard.alert('Failed to import configuration.');});
+            } else { fi.value=''; }
+        });
+        document.querySelector('#ResetAllSettings').addEventListener('click', function() {
+            if (confirm('Reset ALL settings to their default values? This cannot be undone.')) {
+                Dashboard.showLoadingMsg();
+                ApiClient.ajax({type:'POST',url:ApiClient.getUrl('JellyTag/ResetConfig')}).then(function(){
+                    Dashboard.hideLoadingMsg();Dashboard.alert('Settings reset. Reloading...');window.location.reload();
+                }).catch(function(){Dashboard.hideLoadingMsg();Dashboard.alert('Failed to reset settings.');});
+            }
+        });
+
+        var outputFmtEl = document.querySelector('#OutputFormat');
+        outputFmtEl.addEventListener('change', toggleOutputQuality);
+        outputFmtEl.addEventListener('input', toggleOutputQuality);
+
+        // ===== Live Preview =====
+        (function() {
+            var previewItemId=null,previewItemName='',searchTimer=null,refreshTimer=null,refreshing=false;
+            var searchInput=document.querySelector('#PreviewSearch'),searchResults=document.querySelector('#PreviewSearchResults');
+            var selectedEl=document.querySelector('#PreviewSelected'),spinner=document.querySelector('#PreviewSpinner');
+            var posterImg=document.querySelector('#PreviewPoster'),thumbImg=document.querySelector('#PreviewThumb');
+            var errorEl=document.querySelector('#PreviewError'),refreshBtn=document.querySelector('#RefreshPreview');
+            searchInput.addEventListener('input',function(){clearTimeout(searchTimer);var qry=searchInput.value.trim();
+                if(qry.length<2){searchResults.style.display='none';return;}
+                searchTimer=setTimeout(function(){ApiClient.getItems(ApiClient.getCurrentUserId(),{SearchTerm:qry,IncludeItemTypes:'Movie',Limit:8,Recursive:true,Fields:'PrimaryImageAspectRatio'}).then(function(result){
+                    searchResults.innerHTML='';if(!result.Items||result.Items.length===0){searchResults.innerHTML='<div class="preview-search-item" style="color:#aaa;">No results</div>';searchResults.style.display='block';return;}
+                    result.Items.forEach(function(item){var div=document.createElement('div');div.className='preview-search-item';div.textContent=item.Name+(item.ProductionYear?' ('+item.ProductionYear+')':'');
+                        div.addEventListener('click',function(){previewItemId=item.Id;previewItemName=item.Name+(item.ProductionYear?' ('+item.ProductionYear+')':'');selectedEl.textContent=previewItemName;searchResults.style.display='none';searchInput.value='';refreshPreview();});
+                        searchResults.appendChild(div);});searchResults.style.display='block';});},300);});
+            document.addEventListener('click',function(e){if(!searchResults.contains(e.target)&&e.target!==searchInput)searchResults.style.display='none';});
+            function refreshPreview(){if(!previewItemId||refreshing)return;refreshing=true;errorEl.style.display='none';errorEl.textContent='';spinner.style.display='block';
+                ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function(config){collectConfigFromForm(config);return ApiClient.updatePluginConfiguration(JellyTagConfig.pluginUniqueId,config);}).then(function(){
+                    return ApiClient.ajax({type:'POST',url:ApiClient.getUrl('JellyTag/ClearCache')});}).then(function(){
+                    var token=ApiClient.accessToken();var bust='_t='+Date.now();var tp=token?'&api_key='+token:'';
+                    var pu=ApiClient.getUrl('Items/'+previewItemId+'/Images/Primary')+'?'+bust+tp;
+                    var tu=ApiClient.getUrl('Items/'+previewItemId+'/Images/Thumb')+'?'+bust+tp;
+                    var pl=new Promise(function(res){var img=new Image();img.onload=function(){posterImg.src=pu;posterImg.style.display='block';res();};img.onerror=function(){posterImg.style.display='none';res();};img.src=pu;});
+                    var tl=new Promise(function(res){var img=new Image();img.onload=function(){thumbImg.src=tu;thumbImg.style.display='block';res();};img.onerror=function(){thumbImg.style.display='none';res();};img.src=tu;});
+                    return Promise.all([pl,tl]);}).then(function(){spinner.style.display='none';refreshing=false;}).catch(function(err){spinner.style.display='none';refreshing=false;errorEl.textContent='Preview error: '+(err.message||err);errorEl.style.display='block';});}
+            var form=document.querySelector('#JellyTagConfigForm');
+            form.addEventListener('input',function(e){if(e.target.closest('.jellytag-preview-panel'))return;clearTimeout(refreshTimer);refreshTimer=setTimeout(refreshPreview,1500);});
+            form.addEventListener('change',function(e){if(e.target.closest('.jellytag-preview-panel'))return;clearTimeout(refreshTimer);refreshTimer=setTimeout(refreshPreview,1500);});
+            refreshBtn.addEventListener('click',function(){clearTimeout(refreshTimer);refreshPreview();});
+        })();
         </script>
     </div>
 </body>

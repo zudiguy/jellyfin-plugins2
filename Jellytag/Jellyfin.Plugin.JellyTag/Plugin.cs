@@ -27,13 +27,16 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
         : base(applicationPaths, xmlSerializer)
     {
         Instance = this;
+
+        // Run legacy migration once at startup
+        Configuration.MigrateFromLegacy();
     }
 
     /// <inheritdoc />
     public override string Name => "JellyTag";
 
     /// <inheritdoc />
-    public override Guid Id => Guid.Parse("a1b2c3d4-e5f6-7890-abcd-ef1234567890");
+    public override Guid Id => Guid.Parse("f4a2e8c1-9b3d-4f7a-b6c5-2d8e1a3f9b04");
 
     /// <inheritdoc />
     public override string Description => "Adds quality badges (4K, 1080p, etc.) to media posters and thumbnails.";
@@ -51,7 +54,10 @@ public class Plugin : BasePlugin<PluginConfiguration>, IHasWebPages
             new PluginPageInfo
             {
                 Name = Name,
-                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html"
+                EmbeddedResourcePath = $"{GetType().Namespace}.Configuration.configPage.html",
+                EnableInMainMenu = true,
+                MenuSection = "Extensions",
+                MenuIcon = "style"
             }
         };
     }

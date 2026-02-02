@@ -16,7 +16,6 @@ public class ImageCacheService : IImageCacheService
     /// <summary>
     /// Initializes a new instance of the <see cref="ImageCacheService"/> class.
     /// </summary>
-    /// <param name="logger">The logger.</param>
     public ImageCacheService(ILogger<ImageCacheService> logger)
     {
         _logger = logger;
@@ -25,9 +24,9 @@ public class ImageCacheService : IImageCacheService
     }
 
     /// <inheritdoc />
-    public Task<Stream?> GetCachedImageAsync(Guid itemId, VideoQuality quality, string imageTag)
+    public Task<Stream?> GetCachedImageAsync(Guid itemId, string badgeKey, string imageTag)
     {
-        var cacheKey = GenerateCacheKey(itemId, quality, imageTag);
+        var cacheKey = GenerateCacheKey(itemId, badgeKey, imageTag);
         var cacheFilePath = GetCachePath(cacheKey);
 
         if (!File.Exists(cacheFilePath))
@@ -35,7 +34,6 @@ public class ImageCacheService : IImageCacheService
             return Task.FromResult<Stream?>(null);
         }
 
-        // Check if cache is expired
         var config = Plugin.Instance?.Configuration;
         var cacheHours = config?.CacheDurationHours ?? 24;
         var fileInfo = new FileInfo(cacheFilePath);
@@ -61,9 +59,9 @@ public class ImageCacheService : IImageCacheService
     }
 
     /// <inheritdoc />
-    public async Task CacheImageAsync(Guid itemId, VideoQuality quality, string imageTag, Stream imageStream)
+    public async Task CacheImageAsync(Guid itemId, string badgeKey, string imageTag, Stream imageStream)
     {
-        var cacheKey = GenerateCacheKey(itemId, quality, imageTag);
+        var cacheKey = GenerateCacheKey(itemId, badgeKey, imageTag);
         var cachePath = GetCachePath(cacheKey);
         var tempPath = cachePath + ".tmp";
 
@@ -71,13 +69,11 @@ public class ImageCacheService : IImageCacheService
         {
             EnsureCacheDirectoryExists();
 
-            // Write to temporary file first to avoid partial reads
             using (var fileStream = new FileStream(tempPath, FileMode.Create, FileAccess.Write, FileShare.None, 4096, true))
             {
                 await imageStream.CopyToAsync(fileStream).ConfigureAwait(false);
             }
 
-            // Atomic rename to final path
             File.Move(tempPath, cachePath, overwrite: true);
 
             _logger.LogDebug("Cached image for item {ItemId} at {Path}", itemId, cachePath);
@@ -86,7 +82,6 @@ public class ImageCacheService : IImageCacheService
         {
             _logger.LogWarning(ex, "Failed to cache image for item {ItemId}", itemId);
 
-            // Clean up temp file if it exists
             try
             {
                 if (File.Exists(tempPath))
@@ -102,6 +97,9 @@ public class ImageCacheService : IImageCacheService
     }
 
     /// <inheritdoc />
+    public string GetCacheDirectory() => _cachePath;
+
+    /// <inheritdoc />
     public void ClearCache()
     {
         lock (_lock)
@@ -110,7 +108,9 @@ public class ImageCacheService : IImageCacheService
             {
                 if (Directory.Exists(_cachePath))
                 {
-                    var files = Directory.GetFiles(_cachePath, "*.jpg");
+                    var jpgFiles = Directory.GetFiles(_cachePath, "*.jpg");
+                    var webpFiles = Directory.GetFiles(_cachePath, "*.webp");
+                    var files = jpgFiles.Concat(webpFiles).ToArray();
                     foreach (var file in files)
                     {
                         try
@@ -138,8 +138,9 @@ public class ImageCacheService : IImageCacheService
     {
         try
         {
-            var pattern = $"{itemId}_*.jpg";
-            var files = Directory.GetFiles(_cachePath, pattern);
+            var jpgPattern = $"{itemId}_*.jpg";
+            var webpPattern = $"{itemId}_*.webp";
+            var files = Directory.GetFiles(_cachePath, jpgPattern).Concat(Directory.GetFiles(_cachePath, webpPattern)).ToArray();
             foreach (var file in files)
             {
                 try
@@ -159,23 +160,104 @@ public class ImageCacheService : IImageCacheService
         }
     }
 
-    private string GenerateCacheKey(Guid itemId, VideoQuality quality, string imageTag)
+    /// <inheritdoc />
+    public (int FileCount, long TotalSizeBytes, DateTime? OldestEntry, DateTime? NewestEntry) GetCacheStats()
+    {
+        try
+        {
+            if (!Directory.Exists(_cachePath))
+            {
+                return (0, 0, null, null);
+            }
+
+            var jpgFiles = Directory.GetFiles(_cachePath, "*.jpg");
+            var webpFiles = Directory.GetFiles(_cachePath, "*.webp");
+            var allFiles = jpgFiles.Concat(webpFiles).Select(f => new FileInfo(f)).ToArray();
+
+            if (allFiles.Length == 0)
+            {
+                return (0, 0, null, null);
+            }
+
+            var totalSize = allFiles.Sum(f => f.Length);
+            var oldest = allFiles.Min(f => f.LastWriteTimeUtc);
+            var newest = allFiles.Max(f => f.LastWriteTimeUtc);
+
+            return (allFiles.Length, totalSize, oldest, newest);
+        }
+        catch (Exception ex)
+        {
+            _logger.LogWarning(ex, "Failed to get cache stats");
+            return (0, 0, null, null);
+        }
+    }
+
+    private string GenerateCacheKey(Guid itemId, string badgeKey, string imageTag)
     {
         var config = Plugin.Instance?.Configuration;
-        // Include all config values that affect the output image
-        var configHash = $"{config?.PosterSettings?.BadgePosition}_{config?.PosterSettings?.BadgeSizePercent}_{config?.PosterSettings?.BadgeMargin}_{config?.ThumbnailSettings?.BadgePosition}_{config?.ThumbnailSettings?.BadgeSizePercent}_{config?.ThumbnailSettings?.BadgeMargin}_{config?.BackdropSettings?.BadgePosition}_{config?.BackdropSettings?.BadgeSizePercent}_{config?.BackdropSettings?.BadgeMargin}_{config?.JpegQuality}";
-        var input = $"{itemId}_{quality}_{imageTag}_{configHash}";
+        var configFingerprint = config != null ? ComputeConfigFingerprint(config) : string.Empty;
+        var input = $"{itemId}_{badgeKey}_{imageTag}_{configFingerprint}";
 
-        using var sha = SHA256.Create();
-        var hashBytes = sha.ComputeHash(Encoding.UTF8.GetBytes(input));
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(input));
         var hash = Convert.ToHexString(hashBytes)[..16];
 
-        return $"{itemId}_{quality}_{hash}";
+        return $"{itemId}_{hash}";
+    }
+
+    private static string ComputeConfigFingerprint(Configuration.PluginConfiguration config)
+    {
+        var sb = new StringBuilder(256);
+        sb.Append(config.Enabled).Append('|');
+        sb.Append((int)config.OutputFormat).Append(config.JpegQuality).Append(config.WebPQuality).Append('|');
+        sb.Append(config.ThumbnailSameAsPoster).Append('|');
+        AppendImageTypeFingerprint(sb, config.PosterConfig);
+        AppendImageTypeFingerprint(sb, config.ThumbnailConfig);
+        if (config.CustomBadgeTexts != null)
+        {
+            foreach (var cbt in config.CustomBadgeTexts)
+            {
+                sb.Append(cbt.Key).Append('=').Append(cbt.Text).Append(',');
+            }
+        }
+
+        var hashBytes = SHA256.HashData(Encoding.UTF8.GetBytes(sb.ToString()));
+        return Convert.ToHexString(hashBytes)[..16];
+    }
+
+    private static void AppendImageTypeFingerprint(StringBuilder sb, Configuration.ImageTypeConfig c)
+    {
+        sb.Append(c.Enabled).Append('|');
+        AppendPanelFingerprint(sb, c.ResolutionPanel);
+        AppendPanelFingerprint(sb, c.HdrPanel);
+        AppendPanelFingerprint(sb, c.CodecPanel);
+        AppendPanelFingerprint(sb, c.AudioPanel);
+        AppendPanelFingerprint(sb, c.LanguagePanel);
+        sb.Append(c.ShowVostIndicator).Append(c.VostBgColor ?? "n").Append(c.VostTextColor ?? "n");
+        sb.Append(c.VostBgOpacity).Append(c.VostCornerRadius).Append('|');
+    }
+
+    private static void AppendPanelFingerprint(StringBuilder sb, Configuration.BadgePanelSettings p)
+    {
+        sb.Append(p.Enabled).Append((int)p.Position).Append((int)p.ShowMode);
+        sb.Append((int)p.Layout).Append(p.GapPercent).Append(p.SizePercent).Append(p.MarginPercent);
+        sb.Append((int)p.Style).Append(p.Order);
+        sb.Append(p.TextBgColor).Append(p.TextBgOpacity).Append(p.TextColor).Append(p.TextCornerRadius);
+        sb.Append(string.Join(",", p.EnabledBadges));
+        if (p.BadgeTypeOverrides != null)
+        {
+            foreach (var o in p.BadgeTypeOverrides)
+            {
+                sb.Append(o.BadgeKey).Append(o.BgColor ?? "n").Append(o.BgOpacity).Append(o.TextColor ?? "n").Append(o.CornerRadius);
+            }
+        }
+        sb.Append('|');
     }
 
     private string GetCachePath(string cacheKey)
     {
-        return Path.Combine(_cachePath, $"{cacheKey}.jpg");
+        var config = Plugin.Instance?.Configuration;
+        var ext = config?.OutputFormat == Configuration.OutputImageFormat.WebP ? ".webp" : ".jpg";
+        return Path.Combine(_cachePath, $"{cacheKey}{ext}");
     }
 
     private void EnsureCacheDirectoryExists()

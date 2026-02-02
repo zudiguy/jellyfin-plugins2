@@ -1,6 +1,7 @@
 using System.Text.RegularExpressions;
 using Jellyfin.Plugin.JellyTag.Configuration;
 using Jellyfin.Plugin.JellyTag.Services;
+using static Jellyfin.Plugin.JellyTag.Configuration.OutputImageFormat;
 using MediaBrowser.Controller.Entities;
 using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Entities.TV;
@@ -11,28 +12,21 @@ namespace Jellyfin.Plugin.JellyTag.Middleware;
 
 /// <summary>
 /// Middleware that intercepts Jellyfin image requests and adds quality badge overlays.
-/// This works for ALL clients (web, mobile, TV, Kodi) since it operates at the HTTP level.
 /// </summary>
 public partial class ImageOverlayMiddleware
 {
     private readonly RequestDelegate _next;
     private readonly ILogger<ImageOverlayMiddleware> _logger;
 
-    [GeneratedRegex(@"^/Items/([0-9a-f]{32}|[0-9a-f-]{36})/Images/(Primary|Thumb|Backdrop)(/\d+)?$", RegexOptions.IgnoreCase)]
+    [GeneratedRegex(@"^/Items/([0-9a-f]{32}|[0-9a-f-]{36})/Images/(Primary|Thumb)(/\d+)?$", RegexOptions.IgnoreCase)]
     private static partial Regex ImagePathRegex();
 
-    /// <summary>
-    /// Initializes a new instance of the <see cref="ImageOverlayMiddleware"/> class.
-    /// </summary>
     public ImageOverlayMiddleware(RequestDelegate next, ILogger<ImageOverlayMiddleware> logger)
     {
         _next = next;
         _logger = logger;
     }
 
-    /// <summary>
-    /// Processes the HTTP request, intercepting image requests to add badge overlays.
-    /// </summary>
     public async Task InvokeAsync(
         HttpContext context,
         IQualityDetectionService qualityService,
@@ -64,14 +58,6 @@ public partial class ImageOverlayMiddleware
         var itemIdStr = match.Groups[1].Value;
         var imageType = match.Groups[2].Value;
 
-        // Get settings for this image type
-        var imageSettings = GetImageTypeSettings(config, imageType);
-        if (imageSettings == null || !imageSettings.Enabled)
-        {
-            await _next(context).ConfigureAwait(false);
-            return;
-        }
-
         if (!Guid.TryParse(itemIdStr, out var itemId))
         {
             await _next(context).ConfigureAwait(false);
@@ -85,37 +71,66 @@ public partial class ImageOverlayMiddleware
             return;
         }
 
-        // Only badge actual media content, not library folders, collections, persons, etc.
         if (item is not (Movie or Series or Season or Episode or Video))
         {
             await _next(context).ConfigureAwait(false);
             return;
         }
 
-        var videoQuality = qualityService.GetQualityFromItem(item);
-        if (videoQuality == VideoQuality.Unknown || !overlayService.ShouldShowBadge(videoQuality))
+        // Check if item's library is excluded
+        if (config.ExcludedLibraryIds.Count > 0)
+        {
+            var collectionFolders = libraryManager.GetCollectionFolders(item);
+            if (collectionFolders.Any(f => config.ExcludedLibraryIds.Contains(f.Id.ToString("N"))))
+            {
+                await _next(context).ConfigureAwait(false);
+                return;
+            }
+        }
+
+        var imageConfig = GetImageTypeConfig(config, imageType, item);
+        if (imageConfig == null || !imageConfig.Enabled)
         {
             await _next(context).ConfigureAwait(false);
             return;
         }
 
-        // Build cache key from query params + image type settings
+        // Detect all badges and filter by config
+        var allBadges = qualityService.DetectAllBadges(item);
+        _logger.LogDebug("DetectAllBadges for {Item}: {Count} badges found: {Badges}",
+            item.Name, allBadges.Count, string.Join(", ", allBadges.Select(b => $"{b.Category}:{b.BadgeKey}")));
+
+        var visibleBadges = allBadges.Where(b => overlayService.ShouldShowBadge(b, imageConfig)).ToList();
+        _logger.LogDebug("Visible badges after filter: {Count}: {Badges}",
+            visibleBadges.Count, string.Join(", ", visibleBadges.Select(b => b.BadgeKey)));
+
+        if (visibleBadges.Count == 0)
+        {
+            await _next(context).ConfigureAwait(false);
+            return;
+        }
+
+        var badgeKey = string.Join("_", visibleBadges.Select(b => b.BadgeKey));
+        _logger.LogInformation("Applying {Count} badges to {Item}: {BadgeKey}", visibleBadges.Count, item.Name, badgeKey);
+
         var query = context.Request.QueryString.Value ?? string.Empty;
         var tag = context.Request.Query["tag"].FirstOrDefault() ?? item.DateModified.Ticks.ToString();
         var imageTag = $"{tag}_{imageType}_{query}";
 
-        // Check cache
-        var cachedImage = await cacheService.GetCachedImageAsync(itemId, videoQuality, imageTag).ConfigureAwait(false);
+        var cachedImage = await cacheService.GetCachedImageAsync(itemId, badgeKey, imageTag).ConfigureAwait(false);
         if (cachedImage != null)
         {
-            context.Response.ContentType = "image/jpeg";
-            context.Response.ContentLength = cachedImage.Length;
-            await cachedImage.CopyToAsync(context.Response.Body).ConfigureAwait(false);
-            await cachedImage.DisposeAsync().ConfigureAwait(false);
+            await using (cachedImage.ConfigureAwait(false))
+            {
+                var cachedContentType = config.OutputFormat == OutputImageFormat.WebP ? "image/webp" : "image/jpeg";
+                context.Response.ContentType = cachedContentType;
+                context.Response.ContentLength = cachedImage.Length;
+                await cachedImage.CopyToAsync(context.Response.Body).ConfigureAwait(false);
+            }
+
             return;
         }
 
-        // Capture the original response by replacing the body stream
         var originalBody = context.Response.Body;
         using var capturedBody = new MemoryStream();
         context.Response.Body = capturedBody;
@@ -124,7 +139,6 @@ public partial class ImageOverlayMiddleware
         {
             await _next(context).ConfigureAwait(false);
 
-            // Only process successful image responses
             if (context.Response.StatusCode != 200 || capturedBody.Length == 0)
             {
                 capturedBody.Position = 0;
@@ -134,30 +148,29 @@ public partial class ImageOverlayMiddleware
 
             capturedBody.Position = 0;
 
-            // Add badge overlay with per-image-type settings
-            Stream resultStream;
+            (Stream resultStream, string contentType) result;
             try
             {
-                resultStream = await overlayService.AddBadgeOverlayAsync(capturedBody, videoQuality, imageSettings).ConfigureAwait(false);
+                result = await overlayService.AddBadgeOverlaysAsync(capturedBody, visibleBadges, imageConfig).ConfigureAwait(false);
             }
             catch (Exception ex)
             {
-                _logger.LogWarning(ex, "[JellyTag] Failed to add badge overlay, serving original image");
+                _logger.LogWarning(ex, "Failed to add badge overlay, serving original image");
                 capturedBody.Position = 0;
                 await capturedBody.CopyToAsync(originalBody).ConfigureAwait(false);
                 return;
             }
 
-            // Cache the result
-            resultStream.Position = 0;
-            await cacheService.CacheImageAsync(itemId, videoQuality, imageTag, resultStream).ConfigureAwait(false);
+            await using (result.resultStream.ConfigureAwait(false))
+            {
+                result.resultStream.Position = 0;
+                await cacheService.CacheImageAsync(itemId, badgeKey, imageTag, result.resultStream).ConfigureAwait(false);
 
-            // Write to response
-            resultStream.Position = 0;
-            context.Response.ContentType = "image/jpeg";
-            context.Response.ContentLength = resultStream.Length;
-            await resultStream.CopyToAsync(originalBody).ConfigureAwait(false);
-            await resultStream.DisposeAsync().ConfigureAwait(false);
+                result.resultStream.Position = 0;
+                context.Response.ContentType = result.contentType;
+                context.Response.ContentLength = result.resultStream.Length;
+                await result.resultStream.CopyToAsync(originalBody).ConfigureAwait(false);
+            }
         }
         finally
         {
@@ -165,14 +178,71 @@ public partial class ImageOverlayMiddleware
         }
     }
 
-    private static ImageTypeSettings? GetImageTypeSettings(PluginConfiguration config, string imageType)
+    private static ImageTypeConfig? GetImageTypeConfig(PluginConfiguration config, string imageType, BaseItem item)
     {
-        return imageType.ToUpperInvariant() switch
+        var type = imageType.ToUpperInvariant();
+
+        var isThumb = type switch
         {
-            "PRIMARY" => config.PosterSettings,
-            "THUMB" => config.ThumbnailSettings,
-            "BACKDROP" => config.BackdropSettings,
+            "PRIMARY" when item is Episode => true,
+            "THUMB" => true,
+            _ => false
+        };
+
+        if (isThumb && config.ThumbnailSameAsPoster)
+        {
+            return ApplySizeReduction(config.PosterConfig, config.ThumbnailSizeReduction);
+        }
+
+        return type switch
+        {
+            "PRIMARY" when item is Episode => config.ThumbnailConfig,
+            "PRIMARY" => config.PosterConfig,
+            "THUMB" => config.ThumbnailConfig,
             _ => null
+        };
+    }
+
+    private static ImageTypeConfig ApplySizeReduction(ImageTypeConfig source, int reduction)
+    {
+        if (reduction <= 0) return source;
+
+        var clone = new ImageTypeConfig
+        {
+            Enabled = source.Enabled,
+            ResolutionPanel = ClonePanelWithReduction(source.ResolutionPanel, reduction),
+            HdrPanel = ClonePanelWithReduction(source.HdrPanel, reduction),
+            CodecPanel = ClonePanelWithReduction(source.CodecPanel, reduction),
+            AudioPanel = ClonePanelWithReduction(source.AudioPanel, reduction),
+            LanguagePanel = ClonePanelWithReduction(source.LanguagePanel, reduction),
+            ShowVostIndicator = source.ShowVostIndicator,
+            VostBgColor = source.VostBgColor,
+            VostTextColor = source.VostTextColor,
+            VostBgOpacity = source.VostBgOpacity,
+            VostCornerRadius = source.VostCornerRadius
+        };
+        return clone;
+    }
+
+    private static BadgePanelSettings ClonePanelWithReduction(BadgePanelSettings panel, int reduction)
+    {
+        return new BadgePanelSettings
+        {
+            Enabled = panel.Enabled,
+            Position = panel.Position,
+            ShowMode = panel.ShowMode,
+            Layout = panel.Layout,
+            GapPercent = panel.GapPercent,
+            SizePercent = Math.Max(1, panel.SizePercent - reduction),
+            MarginPercent = panel.MarginPercent,
+            Style = panel.Style,
+            Order = panel.Order,
+            TextBgColor = panel.TextBgColor,
+            TextBgOpacity = panel.TextBgOpacity,
+            TextColor = panel.TextColor,
+            TextCornerRadius = panel.TextCornerRadius,
+            BadgeTypeOverrides = new List<BadgeTypeStyleOverride>(panel.BadgeTypeOverrides),
+            EnabledBadges = new List<string>(panel.EnabledBadges)
         };
     }
 }
