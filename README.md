@@ -1,3 +1,5 @@
+*Status: Active development is temporarily paused while I deepen my understanding of the codebase. The project is not abandoned.
+see [#17](https://github.com/Atilil/jellyfin-plugins/issues/17) for the full context.*
 
 # Jellyfin Plugins by Atilili
 
