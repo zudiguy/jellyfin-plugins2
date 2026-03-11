@@ -10,6 +10,8 @@ using VideoRangeType = Jellyfin.Data.Enums.VideoRangeType;
 
 namespace Jellyfin.Plugin.JellyTag.Services;
 
+// .strm file support: FileNameParser for extracting metadata from filenames
+
 /// <summary>
 /// Service for detecting video quality from media items.
 /// </summary>
@@ -190,6 +192,19 @@ public class QualityDetectionService : IQualityDetectionService
     {
         try
         {
+            // Check if this is a .strm file - if so, try filename parsing first
+            var filePath = video.Path;
+            if (!string.IsNullOrEmpty(filePath) && filePath.EndsWith(".strm", StringComparison.OrdinalIgnoreCase))
+            {
+                var fileNameBadges = DetectBadgesFromStrmFileName(filePath, includeResolution);
+                if (fileNameBadges.Count > 0)
+                {
+                    badges.AddRange(fileNameBadges);
+                    _logger.LogDebug("Detected {Count} badges from .strm filename: {Path}", fileNameBadges.Count, filePath);
+                    return; // Use filename-based badges for .strm files
+                }
+            }
+
             var mediaSources = video.GetMediaSources(false);
             var mediaSource = mediaSources?.FirstOrDefault();
             var videoStream = mediaSource?.MediaStreams?.FirstOrDefault(s => s.Type == MediaStreamType.Video);
@@ -459,6 +474,17 @@ public class QualityDetectionService : IQualityDetectionService
     {
         try
         {
+            // Check if this is a .strm file - if so, try filename parsing first
+            var filePath = video.Path;
+            if (!string.IsNullOrEmpty(filePath) && filePath.EndsWith(".strm", StringComparison.OrdinalIgnoreCase))
+            {
+                var quality = GetQualityFromStrmFileName(filePath);
+                if (quality != VideoQuality.Unknown)
+                {
+                    return quality;
+                }
+            }
+
             var mediaSources = video.GetMediaSources(false);
             var mediaSource = mediaSources?.FirstOrDefault();
             var videoStream = mediaSource?.MediaStreams?.FirstOrDefault(s => s.Type == MediaStreamType.Video);
@@ -473,5 +499,135 @@ public class QualityDetectionService : IQualityDetectionService
             _logger.LogWarning(ex, "Failed to get media sources for video item: {ItemName}", video.Name);
             return VideoQuality.Unknown;
         }
+    }
+
+    /// <summary>
+    /// Detects badges from .strm filename using FileNameParser.
+    /// Supports filenames like: "Movie (2012) [Remux-2160p HEVC DV HDR10 10-bit TrueHD Atmos 7.1]-Group.strm"
+    /// </summary>
+    private List<BadgeInfo> DetectBadgesFromStrmFileName(string filePath, bool includeResolution)
+    {
+        var badges = new List<BadgeInfo>();
+        var parser = new FileNameParser();
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+        var metadata = parser.Parse(fileName);
+
+        if (!metadata.HasMetadata())
+        {
+            return badges;
+        }
+
+        // Resolution badge
+        if (includeResolution && metadata.Resolution != null)
+        {
+            var quality = metadata.Resolution.ToUpperInvariant() switch
+            {
+                "4K" or "2160P" => VideoQuality.UHD4K,
+                "1080P" => VideoQuality.FHD1080p,
+                "720P" => VideoQuality.HD720p,
+                "480P" or "576P" or "360P" => VideoQuality.SD,
+                _ => VideoQuality.Unknown
+            };
+            if (quality != VideoQuality.Unknown)
+            {
+                badges.Add(CreateResolutionBadge(quality));
+            }
+        }
+
+        // HDR badges
+        foreach (var hdr in metadata.HdrFormats)
+        {
+            var hdrBadge = hdr.ToUpperInvariant() switch
+            {
+                "DV" or "DOLBYVISION" => new BadgeInfo { Category = BadgeCategory.Hdr, BadgeKey = "dv", ResourceFileName = "badge-dv.svg" },
+                "HDR10+" => new BadgeInfo { Category = BadgeCategory.Hdr, BadgeKey = "hdr10plus", ResourceFileName = "badge-hdr10plus.svg" },
+                "HDR10" => new BadgeInfo { Category = BadgeCategory.Hdr, BadgeKey = "hdr10", ResourceFileName = "badge-hdr10.svg" },
+                "HDR" => new BadgeInfo { Category = BadgeCategory.Hdr, BadgeKey = "hdr", ResourceFileName = "badge-hdr.svg" },
+                "HLG" => new BadgeInfo { Category = BadgeCategory.Hdr, BadgeKey = "hlg", ResourceFileName = "badge-hlg.svg" },
+                _ => null
+            };
+            if (hdrBadge != null)
+            {
+                badges.Add(hdrBadge);
+                break; // Only add first/highest priority HDR badge
+            }
+        }
+
+        // Video codec badge
+        if (metadata.VideoCodec != null)
+        {
+            var codecBadge = metadata.VideoCodec.ToUpperInvariant() switch
+            {
+                "HEVC" or "H265" or "H.265" or "X265" => new BadgeInfo { Category = BadgeCategory.VideoCodec, BadgeKey = "hevc", ResourceFileName = "badge-hevc.svg" },
+                "H264" or "H.264" or "X264" => new BadgeInfo { Category = BadgeCategory.VideoCodec, BadgeKey = "h264", ResourceFileName = "badge-h264.svg" },
+                "AV1" => new BadgeInfo { Category = BadgeCategory.VideoCodec, BadgeKey = "av1", ResourceFileName = "badge-av1.svg" },
+                "VP9" => new BadgeInfo { Category = BadgeCategory.VideoCodec, BadgeKey = "vp9", ResourceFileName = "badge-vp9.svg" },
+                _ => null
+            };
+            if (codecBadge != null)
+            {
+                badges.Add(codecBadge);
+            }
+        }
+
+        // Audio badges
+        foreach (var audio in metadata.AudioCodecs)
+        {
+            var audioBadge = audio.ToUpperInvariant() switch
+            {
+                "ATMOS" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "atmos", ResourceFileName = "badge-atmos.svg" },
+                "TRUEHD" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "truehd", ResourceFileName = "badge-truehd.svg" },
+                "DTS-HD MA" or "DTSHDMA" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "dtshdma", ResourceFileName = "badge-dtshdma.svg" },
+                "DTS:X" or "DTSX" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "dtsx", ResourceFileName = "badge-dtsx.svg" },
+                _ => null
+            };
+            if (audioBadge != null)
+            {
+                badges.Add(audioBadge);
+                break; // Only add first/highest priority audio codec
+            }
+        }
+
+        // Audio channels
+        if (metadata.AudioChannels != null)
+        {
+            var channelBadge = metadata.AudioChannels switch
+            {
+                "7.1" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "7.1", ResourceFileName = "badge-7_1.svg" },
+                "5.1" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "5.1", ResourceFileName = "badge-5_1.svg" },
+                "2.0" => new BadgeInfo { Category = BadgeCategory.Audio, BadgeKey = "stereo", ResourceFileName = "badge-stereo.svg" },
+                _ => null
+            };
+            if (channelBadge != null)
+            {
+                badges.Add(channelBadge);
+            }
+        }
+
+        return badges;
+    }
+
+    /// <summary>
+    /// Gets video quality from .strm filename using FileNameParser.
+    /// </summary>
+    private VideoQuality GetQualityFromStrmFileName(string filePath)
+    {
+        var parser = new FileNameParser();
+        var fileName = Path.GetFileNameWithoutExtension(filePath);
+        var metadata = parser.Parse(fileName);
+
+        if (metadata.Resolution == null)
+        {
+            return VideoQuality.Unknown;
+        }
+
+        return metadata.Resolution.ToUpperInvariant() switch
+        {
+            "4K" or "2160P" => VideoQuality.UHD4K,
+            "1080P" => VideoQuality.FHD1080p,
+            "720P" => VideoQuality.HD720p,
+            "480P" or "576P" or "360P" => VideoQuality.SD,
+            _ => VideoQuality.Unknown
+        };
     }
 }
