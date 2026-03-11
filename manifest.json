@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/zudiguy/jellyfin-plugins2/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png",
     "versions": [
       {
+        "version": "2.2.1.0",
+        "changelog": "UI fix:\n- Added 'Use Gradient Overlay Style' toggle to plugin settings UI\n- All v2.2.0 features included",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.1.0/jellytag-2.2.1.0.zip",
+        "checksum": "27bdcb81fad56de2e12e298761804944",
+        "timestamp": "2026-03-11T00:00:00Z"
+      },
+      {
         "version": "2.2.0.0",
         "changelog": "Added gradient overlays and ratings:\n- Gradient backgrounds (different for Movies vs TV Shows)\n- Combined Kometa-style badges (DV-HDR-TrueHD-Atmos, etc.)\n- Audience rating badges with color coding\n- Enable via 'Use Kometa Style' in plugin settings\n- All previous .strm parsing features included",
         "targetAbi": "10.11.0.0",
