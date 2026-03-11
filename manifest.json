@@ -13,7 +13,7 @@
         "changelog": "Complete UI settings:\n- Added full Gradient Overlay Settings section to plugin UI\n- Configure gradient height, badge enables, sizes, margins\n- All gradient overlay settings now accessible from plugin settings\n- All v2.2.0 features included",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.2.0/jellytag-2.2.2.0.zip",
-        "checksum": "aac68106b1cf87db204b72f85ef0922e",
+        "checksum": "e83daf4719b47ba7e2d0d61659a4f19d",
         "timestamp": "2026-03-11T00:00:00Z"
       },
       {
