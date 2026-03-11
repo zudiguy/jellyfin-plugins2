@@ -1,6 +1,7 @@
 using System.Reflection;
 using System.Xml.Linq;
 using Jellyfin.Plugin.JellyTag.Configuration;
+using MediaBrowser.Controller.Entities;
 using Microsoft.Extensions.Logging;
 using SkiaSharp;
 using Svg.Skia;
@@ -13,6 +14,7 @@ namespace Jellyfin.Plugin.JellyTag.Services;
 public class ImageOverlayService : IImageOverlayService, IDisposable
 {
     private readonly ILogger<ImageOverlayService> _logger;
+    private readonly KometaOverlayService _kometaService;
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, byte[]> _svgCache = new();
     private readonly System.Collections.Concurrent.ConcurrentDictionary<string, SKBitmap?> _rasterCache = new();
     private readonly SemaphoreSlim _badgeLock = new(1, 1);
@@ -60,9 +62,10 @@ public class ImageOverlayService : IImageOverlayService, IDisposable
         { "vostcym", "VOSTCY" }, { "vostwel", "VOSTCY" }
     };
 
-    public ImageOverlayService(ILogger<ImageOverlayService> logger)
+    public ImageOverlayService(ILogger<ImageOverlayService> logger, KometaOverlayService kometaService)
     {
         _logger = logger;
+        _kometaService = kometaService;
     }
 
     /// <summary>
@@ -308,6 +311,87 @@ public class ImageOverlayService : IImageOverlayService, IDisposable
         {
             _badgeLock.Release();
         }
+    }
+
+    /// <inheritdoc />
+    public async Task<(Stream Stream, string ContentType)> AddKometaOverlaysAsync(Stream originalImage, List<BadgeInfo> badges, BaseItem item)
+    {
+        var config = Plugin.Instance?.Configuration ?? new PluginConfiguration();
+        var kometaConfig = config.KometaConfig ?? new KometaStyleConfig();
+        var jpegQuality = Math.Clamp(config.JpegQuality, 1, 100);
+
+        originalImage.Position = 0;
+        using var image = SKBitmap.Decode(originalImage);
+        if (image == null)
+        {
+            originalImage.Position = 0;
+            var output = new MemoryStream();
+            await originalImage.CopyToAsync(output).ConfigureAwait(false);
+            output.Position = 0;
+            return (output, "image/jpeg");
+        }
+
+        // Extract badge information for Kometa overlay
+        string? resolution = null;
+        string? hdrType = null;
+        string? audioCodec = null;
+        float? rating = QualityDetectionService.GetItemRating(item);
+        bool isMovie = QualityDetectionService.IsMovie(item);
+
+        foreach (var badge in badges)
+        {
+            switch (badge.Category)
+            {
+                case BadgeCategory.Resolution:
+                    resolution = badge.BadgeKey;
+                    break;
+                case BadgeCategory.Hdr:
+                    hdrType = badge.BadgeKey;
+                    break;
+                case BadgeCategory.Audio:
+                    // Take the first/highest priority audio badge
+                    if (audioCodec == null)
+                    {
+                        audioCodec = badge.BadgeKey;
+                    }
+                    break;
+            }
+        }
+
+        // Create Kometa overlay config from plugin config
+        var overlayConfig = new KometaOverlayConfig
+        {
+            EnableGradient = kometaConfig.EnableGradient,
+            GradientHeightPercent = kometaConfig.GradientHeightPercent,
+            EnableResolutionBadge = kometaConfig.EnableResolutionBadge,
+            EnableCodecBadge = kometaConfig.EnableCodecBadge,
+            EnableRatingBadge = kometaConfig.EnableRatingBadge,
+            BadgeSizePercent = kometaConfig.BadgeSizePercent,
+            RatingBadgeSizePercent = kometaConfig.RatingBadgeSizePercent,
+            BadgeBottomMarginPercent = kometaConfig.BadgeBottomMarginPercent,
+            BadgeLeftMarginPercent = kometaConfig.BadgeLeftMarginPercent,
+            BadgeRightMarginPercent = kometaConfig.BadgeRightMarginPercent,
+            BadgeGapPercent = kometaConfig.BadgeGapPercent,
+            ShowRatingNumber = kometaConfig.ShowRatingNumber
+        };
+
+        // Apply Kometa overlay
+        using var resultBitmap = await _kometaService.ApplyKometaOverlayAsync(
+            image, isMovie, resolution, hdrType, audioCodec, rating, overlayConfig).ConfigureAwait(false);
+
+        // Encode result
+        var outputFormat = config.OutputFormat;
+        var encodeFormat = outputFormat == OutputImageFormat.WebP ? SKEncodedImageFormat.Webp : SKEncodedImageFormat.Jpeg;
+        var encodeQuality = outputFormat == OutputImageFormat.WebP ? Math.Clamp(config.WebPQuality, 1, 100) : jpegQuality;
+        var contentType = outputFormat == OutputImageFormat.WebP ? "image/webp" : "image/jpeg";
+
+        using var resultImage = SKImage.FromBitmap(resultBitmap);
+        using var data = resultImage.Encode(encodeFormat, encodeQuality);
+
+        var outputStream = new MemoryStream();
+        data.SaveTo(outputStream);
+        outputStream.Position = 0;
+        return (outputStream, contentType);
     }
 
     private async Task PrepareBadgeGroup(

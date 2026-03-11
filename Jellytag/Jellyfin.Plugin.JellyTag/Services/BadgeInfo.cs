@@ -38,7 +38,12 @@ public enum BadgeCategory
     /// <summary>
     /// Subtitle indicator badge (VOSTFR, VOSTEN, etc.).
     /// </summary>
-    Subtitle
+    Subtitle,
+
+    /// <summary>
+    /// Rating badge (audience score from TMDb, etc.).
+    /// </summary>
+    Rating
 }
 
 /// <summary>

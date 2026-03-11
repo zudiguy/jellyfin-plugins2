@@ -25,17 +25,21 @@ jobs:
       - name: Build plugin
         run: dotnet publish Jellytag/Jellyfin.Plugin.JellyTag/Jellyfin.Plugin.JellyTag.csproj -c Release -o output
 
+      - name: Get version from tag
+        id: version
+        run: echo "VERSION=${GITHUB_REF#refs/tags/jellytag-}" >> $GITHUB_OUTPUT
+
       - name: Create meta.json
         run: |
           cat > output/meta.json << 'EOF'
           {
               "guid": "f4a2e8c1-9b3d-4f7a-b6c5-2d8e1a3f9b04",
-              "name": "JellyTag (STRM Support)",
-              "overview": "Adds quality badges to media posters - with .strm filename parsing",
-              "description": "JellyTag with .strm file support. Extracts metadata from filenames like [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1]",
+              "name": "JellyTag (STRM + Overlays)",
+              "overview": "Quality badges with .strm parsing, gradients & ratings",
+              "description": "JellyTag with .strm file support and gradient overlays. Includes Kometa-style gradients, combined badges, and audience rating badges.",
               "owner": "zudiguy",
               "category": "General",
-              "version": "2.1.0.0",
+              "version": "${{ steps.version.outputs.VERSION }}",
               "targetAbi": "10.11.0.0",
               "timestamp": "2026-03-11T00:00:00Z"
           }
@@ -44,35 +48,40 @@ jobs:
       - name: Create ZIP archive
         run: |
           cd output
-          zip -r jellytag-2.1.0.0.zip *.dll meta.json
+          zip -r jellytag-${{ steps.version.outputs.VERSION }}.zip *.dll meta.json
           cd ..
-
-      - name: Get version from tag
-        id: get_version
-        run: echo "VERSION=${GITHUB_REF#refs/tags/jellytag-}" >> $GITHUB_OUTPUT
 
       - name: Create Release
         uses: softprops/action-gh-release@v1
         if: startsWith(github.ref, 'refs/tags/')
         with:
-          name: JellyTag v${{ steps.get_version.outputs.VERSION }} (STRM Support)
+          name: JellyTag v${{ steps.version.outputs.VERSION }} (STRM + Overlays)
           body: |
-            ## JellyTag with .strm Filename Support
+            ## JellyTag with .strm Support & Gradient Overlays
 
-            This release adds support for .strm files by parsing metadata from filenames.
+            This release includes .strm filename parsing and Kometa-style gradient overlays.
 
             ### Features
             - Parses .strm filenames like `Movie [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1].strm`
-            - Extracts resolution, HDR, video codec, audio codec, and channels
+            - Gradient overlays for Movies and TV Shows
+            - Combined resolution/HDR/audio badges
+            - Audience rating badges (color-coded by score)
             - Falls back to standard metadata for non-.strm files
+
+            ### New in v2.2.0
+            - Added gradient overlays (different for Movies vs TV)
+            - Added Kometa-style combined badges (DV-HDR-TrueHD-Atmos, etc.)
+            - Added audience rating badges with color coding
+            - Enable via plugin settings: "Use Kometa Style"
 
             ### Installation
             1. Add repository: `https://raw.githubusercontent.com/zudiguy/jellyfin-plugins2/main/manifest.json`
             2. Install from Catalog
             3. Restart Jellyfin
+            4. Enable "Use Kometa Style" in plugin settings
 
             Based on JellyTag v2.0.2.0 by [Atilil](https://github.com/Atilil/jellyfin-plugins)
-          files: output/jellytag-2.1.0.0.zip
+          files: output/jellytag-${{ steps.version.outputs.VERSION }}.zip
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
 
@@ -80,4 +89,4 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: jellytag-plugin
-          path: output/jellytag-2.1.0.0.zip
+          path: output/jellytag-${{ steps.version.outputs.VERSION }}.zip

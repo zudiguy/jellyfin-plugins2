@@ -1,6 +1,7 @@
 using System.Collections.Concurrent;
 using Jellyfin.Data.Enums;
 using MediaBrowser.Controller.Entities;
+using MediaBrowser.Controller.Entities.Movies;
 using MediaBrowser.Controller.Library;
 using MediaBrowser.Model.Entities;
 using MediaBrowser.Model.Querying;
@@ -175,7 +176,59 @@ public class QualityDetectionService : IQualityDetectionService
             }
         }
 
+        // Detect rating badge
+        var ratingBadge = DetectRatingBadge(item);
+        if (ratingBadge != null)
+        {
+            badges.Add(ratingBadge);
+        }
+
         return badges;
+    }
+
+    /// <summary>
+    /// Detects rating badge from item's CommunityRating.
+    /// </summary>
+    private static BadgeInfo? DetectRatingBadge(BaseItem item)
+    {
+        var rating = item.CommunityRating;
+        if (!rating.HasValue || rating.Value <= 0)
+        {
+            return null;
+        }
+
+        // Determine rating tier for badge key
+        var ratingKey = rating.Value switch
+        {
+            >= 9.0f => "rating_highest",
+            >= 7.5f => "rating_high",
+            >= 6.5f => "rating_mid",
+            >= 5.0f => "rating_mid_low",
+            _ => "rating_low"
+        };
+
+        return new BadgeInfo
+        {
+            Category = BadgeCategory.Rating,
+            BadgeKey = ratingKey,
+            ResourceFileName = $"kometa/ratings/audience_score_{ratingKey.Replace("rating_", "")}.png"
+        };
+    }
+
+    /// <summary>
+    /// Gets the community rating for an item.
+    /// </summary>
+    public static float? GetItemRating(BaseItem item)
+    {
+        return item.CommunityRating;
+    }
+
+    /// <summary>
+    /// Determines if the item is a movie (vs TV episode).
+    /// </summary>
+    public static bool IsMovie(BaseItem item)
+    {
+        return item is MediaBrowser.Controller.Entities.Movies.Movie;
     }
 
     private void DetectBadgesFromVideo(Video video, List<BadgeInfo> badges)

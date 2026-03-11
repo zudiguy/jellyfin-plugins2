@@ -1,13 +1,21 @@
 [
   {
     "guid": "f4a2e8c1-9b3d-4f7a-b6c5-2d8e1a3f9b04",
-    "name": "JellyTag (STRM Support)",
-    "overview": "Overlays quality badges on media posters - with .strm filename parsing support",
-    "description": "JellyTag automatically overlays quality badges on your media posters and thumbnails. This fork adds .strm file support - extracts metadata from filenames like 'Movie (2012) [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1].strm'. Supports resolution, HDR, video codec, audio, language flags, and VOST indicator. Badges are rendered server-side and visible on all Jellyfin clients.",
+    "name": "JellyTag (STRM + Overlays)",
+    "overview": "Quality badges with .strm parsing, gradient overlays & ratings",
+    "description": "JellyTag automatically overlays quality badges on your media posters and thumbnails. This fork adds .strm file support and Kometa-style gradient overlays. Features: gradient backgrounds (different for Movies vs TV), combined resolution/HDR/audio badges, audience rating badges with color coding. Extracts metadata from filenames like 'Movie (2012) [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1].strm'. Badges are rendered server-side and visible on all Jellyfin clients.",
     "owner": "zudiguy",
     "category": "General",
     "imageUrl": "https://raw.githubusercontent.com/zudiguy/jellyfin-plugins2/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png",
     "versions": [
+      {
+        "version": "2.2.0.0",
+        "changelog": "Added gradient overlays and ratings:\n- Gradient backgrounds (different for Movies vs TV Shows)\n- Combined Kometa-style badges (DV-HDR-TrueHD-Atmos, etc.)\n- Audience rating badges with color coding\n- Enable via 'Use Kometa Style' in plugin settings\n- All previous .strm parsing features included",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.0.0/jellytag-2.2.0.0.zip",
+        "checksum": "PLACEHOLDER",
+        "timestamp": "2026-03-11T00:00:00Z"
+      },
       {
         "version": "2.1.0.0",
         "changelog": "Fork with .strm file support:\n- Added FileNameParser for .strm filename metadata extraction\n- Extracts resolution, HDR, codec, audio from filenames like [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1]\n- Supports AMZN, DSNP, HMAX, NF streaming service tags\n- Falls back to standard metadata if filename parsing fails\n- Based on JellyTag v2.0.2.0",

@@ -151,7 +151,15 @@ public partial class ImageOverlayMiddleware
             (Stream resultStream, string contentType) result;
             try
             {
-                result = await overlayService.AddBadgeOverlaysAsync(capturedBody, visibleBadges, imageConfig).ConfigureAwait(false);
+                // Use Kometa style if enabled, otherwise use standard badges
+                if (config.UseKometaStyle)
+                {
+                    result = await overlayService.AddKometaOverlaysAsync(capturedBody, visibleBadges, item).ConfigureAwait(false);
+                }
+                else
+                {
+                    result = await overlayService.AddBadgeOverlaysAsync(capturedBody, visibleBadges, imageConfig).ConfigureAwait(false);
+                }
             }
             catch (Exception ex)
             {

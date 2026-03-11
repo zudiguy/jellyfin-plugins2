@@ -1,4 +1,5 @@
 using Jellyfin.Plugin.JellyTag.Configuration;
+using MediaBrowser.Controller.Entities;
 
 namespace Jellyfin.Plugin.JellyTag.Services;
 
@@ -12,6 +13,12 @@ public interface IImageOverlayService
     /// Returns the result stream and the content type.
     /// </summary>
     Task<(Stream Stream, string ContentType)> AddBadgeOverlaysAsync(Stream originalImage, List<BadgeInfo> badges, ImageTypeConfig imageConfig);
+
+    /// <summary>
+    /// Adds Kometa-style overlays with gradients and combined badges.
+    /// Returns the result stream and the content type.
+    /// </summary>
+    Task<(Stream Stream, string ContentType)> AddKometaOverlaysAsync(Stream originalImage, List<BadgeInfo> badges, BaseItem item);
 
     /// <summary>
     /// Determines if a badge should be shown based on the image type config panels.

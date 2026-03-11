@@ -129,6 +129,10 @@ public class PluginConfiguration : BasePluginConfiguration
         JpegQuality = 90;
         OutputFormat = OutputImageFormat.Jpeg;
         WebPQuality = 90;
+
+        // Kometa overlay settings
+        UseKometaStyle = false;
+        KometaConfig = new KometaStyleConfig();
     }
 
     public bool Enabled { get; set; }
@@ -153,6 +157,17 @@ public class PluginConfiguration : BasePluginConfiguration
     public int JpegQuality { get; set; }
     public OutputImageFormat OutputFormat { get; set; }
     public int WebPQuality { get; set; }
+
+    /// <summary>
+    /// Enable Kometa-style overlays with gradients and combined badges.
+    /// When enabled, uses Kometa overlay images instead of standard JellyTag badges.
+    /// </summary>
+    public bool UseKometaStyle { get; set; }
+
+    /// <summary>
+    /// Configuration for Kometa-style overlays.
+    /// </summary>
+    public KometaStyleConfig KometaConfig { get; set; }
 
     // Legacy properties kept for deserialization migration
     // These will be read during migration and then ignored
@@ -453,6 +468,72 @@ public enum LanguageBadgeMode
     None,
     DefaultOnly,
     All
+}
+
+/// <summary>
+/// Configuration for Kometa-style overlays.
+/// </summary>
+public class KometaStyleConfig
+{
+    /// <summary>
+    /// Enable gradient overlay at the bottom of posters.
+    /// </summary>
+    public bool EnableGradient { get; set; } = true;
+
+    /// <summary>
+    /// Height of the gradient as a percentage of the image height.
+    /// </summary>
+    public float GradientHeightPercent { get; set; } = 25f;
+
+    /// <summary>
+    /// Enable resolution badge (4K, 1080p, etc.).
+    /// </summary>
+    public bool EnableResolutionBadge { get; set; } = true;
+
+    /// <summary>
+    /// Enable codec/HDR badge (DV, HDR, Atmos, etc.).
+    /// </summary>
+    public bool EnableCodecBadge { get; set; } = true;
+
+    /// <summary>
+    /// Enable rating badge with color coding.
+    /// </summary>
+    public bool EnableRatingBadge { get; set; } = true;
+
+    /// <summary>
+    /// Badge size as a percentage of image height.
+    /// </summary>
+    public float BadgeSizePercent { get; set; } = 8f;
+
+    /// <summary>
+    /// Rating badge size as a percentage of image height.
+    /// </summary>
+    public float RatingBadgeSizePercent { get; set; } = 10f;
+
+    /// <summary>
+    /// Bottom margin for badges as a percentage of image height.
+    /// </summary>
+    public float BadgeBottomMarginPercent { get; set; } = 3f;
+
+    /// <summary>
+    /// Left margin for badges as a percentage of image width.
+    /// </summary>
+    public float BadgeLeftMarginPercent { get; set; } = 3f;
+
+    /// <summary>
+    /// Right margin for rating badge as a percentage of image width.
+    /// </summary>
+    public float BadgeRightMarginPercent { get; set; } = 3f;
+
+    /// <summary>
+    /// Gap between badges as a percentage of image width.
+    /// </summary>
+    public float BadgeGapPercent { get; set; } = 2f;
+
+    /// <summary>
+    /// Show the rating number on top of the rating badge.
+    /// </summary>
+    public bool ShowRatingNumber { get; set; } = true;
 }
 
 /// <summary>
