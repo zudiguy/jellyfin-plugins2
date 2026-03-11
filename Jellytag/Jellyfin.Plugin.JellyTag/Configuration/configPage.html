@@ -120,6 +120,14 @@
                             </div>
 
                             <h4 style="margin: 1.5em 0 0.5em;">Badges</h4>
+                            <div class="inputContainer" style="max-width: 200px; margin-bottom: 1em;">
+                                <label class="inputLabel inputLabelUnfocused" for="KometaBadgePosition">Badge Position</label>
+                                <select id="KometaBadgePosition" is="emby-select">
+                                    <option value="Bottom">Bottom</option>
+                                    <option value="Top">Top</option>
+                                </select>
+                                <div class="fieldDescription">Position of the badges on the poster.</div>
+                            </div>
                             <div class="jellytag-grid">
                                 <div class="checkboxContainer">
                                     <label class="emby-checkbox-label">
@@ -858,6 +866,7 @@
                 EnableGradient: q('KometaEnableGradient').checked,
                 GradientPosition: q('KometaGradientPosition').value || 'Bottom',
                 GradientHeightPercent: parseFloat(q('KometaGradientHeightPercent').value) || 25,
+                BadgePosition: q('KometaBadgePosition').value || 'Bottom',
                 EnableResolutionBadge: q('KometaEnableResolutionBadge').checked,
                 EnableCodecBadge: q('KometaEnableCodecBadge').checked,
                 EnableRatingBadge: q('KometaEnableRatingBadge').checked,
@@ -1021,6 +1030,7 @@
                 q('KometaEnableGradient').checked = kc.EnableGradient !== false;
                 q('KometaGradientPosition').value = kc.GradientPosition || 'Bottom';
                 q('KometaGradientHeightPercent').value = kc.GradientHeightPercent != null ? kc.GradientHeightPercent : 25;
+                q('KometaBadgePosition').value = kc.BadgePosition || 'Bottom';
                 q('KometaEnableResolutionBadge').checked = kc.EnableResolutionBadge !== false;
                 q('KometaEnableCodecBadge').checked = kc.EnableCodecBadge !== false;
                 q('KometaEnableRatingBadge').checked = kc.EnableRatingBadge !== false;

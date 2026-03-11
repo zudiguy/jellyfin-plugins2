@@ -486,6 +486,11 @@ public class KometaStyleConfig
     public string GradientPosition { get; set; } = "Bottom";
 
     /// <summary>
+    /// Position of the badges (Top or Bottom).
+    /// </summary>
+    public string BadgePosition { get; set; } = "Bottom";
+
+    /// <summary>
     /// Height of the gradient as a percentage of the image height.
     /// </summary>
     public float GradientHeightPercent { get; set; } = 25f;

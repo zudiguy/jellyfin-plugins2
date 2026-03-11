@@ -197,9 +197,13 @@ public class KometaOverlayService : IDisposable
             }
         }
 
-        // Calculate badge positions on the gradient
-        var badgeY = sourceImage.Height - (int)(sourceImage.Height * config.BadgeBottomMarginPercent / 100f);
+        // Calculate badge positions based on position setting
+        var badgesAtTop = config.BadgePosition.Equals("Top", StringComparison.OrdinalIgnoreCase);
         var badgeHeight = (int)(sourceImage.Height * config.BadgeSizePercent / 100f);
+        var marginPercent = config.BadgeBottomMarginPercent / 100f;
+        var badgeY = badgesAtTop
+            ? (int)(sourceImage.Height * marginPercent) + badgeHeight
+            : sourceImage.Height - (int)(sourceImage.Height * marginPercent);
         var badgeX = (int)(sourceImage.Width * config.BadgeLeftMarginPercent / 100f);
         var badgeGap = (int)(sourceImage.Width * config.BadgeGapPercent / 100f);
 
@@ -213,7 +217,8 @@ public class KometaOverlayService : IDisposable
             {
                 var aspectRatio = (float)resBadge.Width / resBadge.Height;
                 var badgeWidth = (int)(badgeHeight * aspectRatio);
-                var destRect = SKRect.Create(badgeX, badgeY - badgeHeight, badgeWidth, badgeHeight);
+                var badgeDrawY = badgesAtTop ? badgeY - badgeHeight : badgeY - badgeHeight;
+                var destRect = SKRect.Create(badgeX, badgeDrawY, badgeWidth, badgeHeight);
                 canvas.DrawBitmap(resBadge, destRect, badgePaint);
                 badgeX += badgeWidth + badgeGap;
             }
@@ -227,7 +232,8 @@ public class KometaOverlayService : IDisposable
             {
                 var aspectRatio = (float)codecBadge.Width / codecBadge.Height;
                 var badgeWidth = (int)(badgeHeight * aspectRatio);
-                var destRect = SKRect.Create(badgeX, badgeY - badgeHeight, badgeWidth, badgeHeight);
+                var badgeDrawY = badgesAtTop ? badgeY - badgeHeight : badgeY - badgeHeight;
+                var destRect = SKRect.Create(badgeX, badgeDrawY, badgeWidth, badgeHeight);
                 canvas.DrawBitmap(codecBadge, destRect, badgePaint);
                 badgeX += badgeWidth + badgeGap;
             }
@@ -243,13 +249,14 @@ public class KometaOverlayService : IDisposable
                 var ratingBadgeHeight = (int)(sourceImage.Height * config.RatingBadgeSizePercent / 100f);
                 var ratingBadgeWidth = (int)(ratingBadgeHeight * aspectRatio);
                 var ratingX = sourceImage.Width - ratingBadgeWidth - (int)(sourceImage.Width * config.BadgeRightMarginPercent / 100f);
-                var destRect = SKRect.Create(ratingX, badgeY - ratingBadgeHeight, ratingBadgeWidth, ratingBadgeHeight);
+                var ratingDrawY = badgesAtTop ? (int)(sourceImage.Height * marginPercent) : badgeY - ratingBadgeHeight;
+                var destRect = SKRect.Create(ratingX, ratingDrawY, ratingBadgeWidth, ratingBadgeHeight);
                 canvas.DrawBitmap(ratingBadge, destRect, badgePaint);
 
                 // Draw rating number on top of the badge
                 if (config.ShowRatingNumber)
                 {
-                    DrawRatingNumber(canvas, rating.Value, ratingX, badgeY - ratingBadgeHeight, ratingBadgeWidth, ratingBadgeHeight);
+                    DrawRatingNumber(canvas, rating.Value, ratingX, ratingDrawY, ratingBadgeWidth, ratingBadgeHeight);
                 }
             }
         }
@@ -416,6 +423,7 @@ public class KometaOverlayConfig
 {
     public bool EnableGradient { get; set; } = true;
     public string GradientPosition { get; set; } = "Bottom";
+    public string BadgePosition { get; set; } = "Bottom";
     public float GradientHeightPercent { get; set; } = 25f;
     public bool EnableResolutionBadge { get; set; } = true;
     public bool EnableCodecBadge { get; set; } = true;

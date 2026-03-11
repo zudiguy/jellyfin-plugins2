@@ -363,6 +363,7 @@ public class ImageOverlayService : IImageOverlayService, IDisposable
         {
             EnableGradient = kometaConfig.EnableGradient,
             GradientPosition = kometaConfig.GradientPosition ?? "Bottom",
+            BadgePosition = kometaConfig.BadgePosition ?? "Bottom",
             GradientHeightPercent = kometaConfig.GradientHeightPercent,
             EnableResolutionBadge = kometaConfig.EnableResolutionBadge,
             EnableCodecBadge = kometaConfig.EnableCodecBadge,
