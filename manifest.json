@@ -13,7 +13,7 @@
         "changelog": "Fixed gradient rendering:\n- Replaced PNG gradient with programmatic gradient\n- Gradient now correctly fades from transparent to black\n- Much better visibility for badges",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.6.0/jellytag-2.2.6.0.zip",
-        "checksum": "PLACEHOLDER",
+        "checksum": "fa99e1202e301e82c79c50afa6796a66",
         "timestamp": "2026-03-11T00:00:00Z"
       },
       {
