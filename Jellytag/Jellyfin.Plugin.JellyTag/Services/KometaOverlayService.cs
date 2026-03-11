@@ -180,15 +180,17 @@ public class KometaOverlayService : IDisposable
         // Draw original image
         canvas.DrawBitmap(sourceImage, 0, 0);
 
-        // Apply gradient at bottom
+        // Apply gradient
         if (config.EnableGradient)
         {
-            var gradient = await GetGradientAsync(isMovie, isTop: false).ConfigureAwait(false);
+            var isTop = config.GradientPosition.Equals("Top", StringComparison.OrdinalIgnoreCase);
+            var gradient = await GetGradientAsync(isMovie, isTop).ConfigureAwait(false);
             if (gradient != null)
             {
-                // Scale gradient to match image width, position at bottom
+                // Scale gradient to match image width, position at top or bottom
                 var gradientHeight = (int)(sourceImage.Height * config.GradientHeightPercent / 100f);
-                var destRect = SKRect.Create(0, sourceImage.Height - gradientHeight, sourceImage.Width, gradientHeight);
+                var yPosition = isTop ? 0 : sourceImage.Height - gradientHeight;
+                var destRect = SKRect.Create(0, yPosition, sourceImage.Width, gradientHeight);
 
                 using var paint = new SKPaint { IsAntialias = true };
                 canvas.DrawBitmap(gradient, destRect, paint);
@@ -413,6 +415,7 @@ public class KometaOverlayService : IDisposable
 public class KometaOverlayConfig
 {
     public bool EnableGradient { get; set; } = true;
+    public string GradientPosition { get; set; } = "Bottom";
     public float GradientHeightPercent { get; set; } = 25f;
     public bool EnableResolutionBadge { get; set; } = true;
     public bool EnableCodecBadge { get; set; } = true;

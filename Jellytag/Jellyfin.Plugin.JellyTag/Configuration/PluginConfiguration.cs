@@ -481,6 +481,11 @@ public class KometaStyleConfig
     public bool EnableGradient { get; set; } = true;
 
     /// <summary>
+    /// Position of the gradient overlay (Top or Bottom).
+    /// </summary>
+    public string GradientPosition { get; set; } = "Bottom";
+
+    /// <summary>
     /// Height of the gradient as a percentage of the image height.
     /// </summary>
     public float GradientHeightPercent { get; set; } = 25f;
