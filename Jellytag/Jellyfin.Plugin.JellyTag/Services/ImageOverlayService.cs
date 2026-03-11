@@ -365,6 +365,7 @@ public class ImageOverlayService : IImageOverlayService, IDisposable
             GradientPosition = kometaConfig.GradientPosition ?? "Bottom",
             BadgePosition = kometaConfig.BadgePosition ?? "Bottom",
             GradientHeightPercent = kometaConfig.GradientHeightPercent,
+            GradientOpacity = kometaConfig.GradientOpacity,
             EnableResolutionBadge = kometaConfig.EnableResolutionBadge,
             EnableCodecBadge = kometaConfig.EnableCodecBadge,
             EnableRatingBadge = kometaConfig.EnableRatingBadge,

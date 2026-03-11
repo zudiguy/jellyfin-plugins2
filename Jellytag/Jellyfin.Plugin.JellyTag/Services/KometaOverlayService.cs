@@ -192,7 +192,13 @@ public class KometaOverlayService : IDisposable
                 var yPosition = isTop ? 0 : sourceImage.Height - gradientHeight;
                 var destRect = SKRect.Create(0, yPosition, sourceImage.Width, gradientHeight);
 
-                using var paint = new SKPaint { IsAntialias = true };
+                // Apply opacity to the gradient
+                var opacity = (byte)(255 * Math.Clamp(config.GradientOpacity / 100f, 0f, 1f));
+                using var paint = new SKPaint
+                {
+                    IsAntialias = true,
+                    Color = new SKColor(255, 255, 255, opacity)
+                };
                 canvas.DrawBitmap(gradient, destRect, paint);
             }
         }
@@ -424,7 +430,8 @@ public class KometaOverlayConfig
     public bool EnableGradient { get; set; } = true;
     public string GradientPosition { get; set; } = "Bottom";
     public string BadgePosition { get; set; } = "Bottom";
-    public float GradientHeightPercent { get; set; } = 25f;
+    public float GradientHeightPercent { get; set; } = 40f;
+    public float GradientOpacity { get; set; } = 100f;
     public bool EnableResolutionBadge { get; set; } = true;
     public bool EnableCodecBadge { get; set; } = true;
     public bool EnableRatingBadge { get; set; } = true;

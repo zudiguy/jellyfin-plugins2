@@ -493,7 +493,12 @@ public class KometaStyleConfig
     /// <summary>
     /// Height of the gradient as a percentage of the image height.
     /// </summary>
-    public float GradientHeightPercent { get; set; } = 25f;
+    public float GradientHeightPercent { get; set; } = 40f;
+
+    /// <summary>
+    /// Opacity of the gradient overlay (0-100%).
+    /// </summary>
+    public float GradientOpacity { get; set; } = 100f;
 
     /// <summary>
     /// Enable resolution badge (4K, 1080p, etc.).

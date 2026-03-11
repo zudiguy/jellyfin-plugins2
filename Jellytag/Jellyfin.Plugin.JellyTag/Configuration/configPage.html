@@ -114,8 +114,13 @@
                                 </div>
                                 <div class="inputContainer">
                                     <label class="inputLabel inputLabelUnfocused" for="KometaGradientHeightPercent">Gradient Height (%)</label>
-                                    <input id="KometaGradientHeightPercent" type="number" min="5" max="50" step="1" is="emby-input" />
+                                    <input id="KometaGradientHeightPercent" type="number" min="10" max="80" step="5" is="emby-input" />
                                     <div class="fieldDescription">Height of gradient as percentage of image height.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaGradientOpacity">Gradient Opacity (%)</label>
+                                    <input id="KometaGradientOpacity" type="number" min="50" max="100" step="5" is="emby-input" />
+                                    <div class="fieldDescription">Opacity/darkness of the gradient (100 = fully opaque).</div>
                                 </div>
                             </div>
 
@@ -865,7 +870,8 @@
             config.KometaConfig = {
                 EnableGradient: q('KometaEnableGradient').checked,
                 GradientPosition: q('KometaGradientPosition').value || 'Bottom',
-                GradientHeightPercent: parseFloat(q('KometaGradientHeightPercent').value) || 25,
+                GradientHeightPercent: parseFloat(q('KometaGradientHeightPercent').value) || 40,
+                GradientOpacity: parseFloat(q('KometaGradientOpacity').value) || 100,
                 BadgePosition: q('KometaBadgePosition').value || 'Bottom',
                 EnableResolutionBadge: q('KometaEnableResolutionBadge').checked,
                 EnableCodecBadge: q('KometaEnableCodecBadge').checked,
@@ -1029,7 +1035,8 @@
                 var kc = config.KometaConfig || {};
                 q('KometaEnableGradient').checked = kc.EnableGradient !== false;
                 q('KometaGradientPosition').value = kc.GradientPosition || 'Bottom';
-                q('KometaGradientHeightPercent').value = kc.GradientHeightPercent != null ? kc.GradientHeightPercent : 25;
+                q('KometaGradientHeightPercent').value = kc.GradientHeightPercent != null ? kc.GradientHeightPercent : 40;
+                q('KometaGradientOpacity').value = kc.GradientOpacity != null ? kc.GradientOpacity : 100;
                 q('KometaBadgePosition').value = kc.BadgePosition || 'Bottom';
                 q('KometaEnableResolutionBadge').checked = kc.EnableResolutionBadge !== false;
                 q('KometaEnableCodecBadge').checked = kc.EnableCodecBadge !== false;
