@@ -13,7 +13,7 @@
         "changelog": "Fork with .strm file support:\n- Added FileNameParser for .strm filename metadata extraction\n- Extracts resolution, HDR, codec, audio from filenames like [Remux-2160p HEVC DV HDR10 TrueHD Atmos 7.1]\n- Supports AMZN, DSNP, HMAX, NF streaming service tags\n- Falls back to standard metadata if filename parsing fails\n- Based on JellyTag v2.0.2.0",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.1.0.0/jellytag-2.1.0.0.zip",
-        "checksum": "0000000000000000000000000000000000000000000000000000000000000000",
+        "checksum": "d97f6909e432396ee0bdf7140b9328db",
         "timestamp": "2026-03-11T00:00:00Z"
       },
       {
