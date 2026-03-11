@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/zudiguy/jellyfin-plugins2/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png",
     "versions": [
       {
+        "version": "2.2.6.0",
+        "changelog": "Fixed gradient rendering:\n- Replaced PNG gradient with programmatic gradient\n- Gradient now correctly fades from transparent to black\n- Much better visibility for badges",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.6.0/jellytag-2.2.6.0.zip",
+        "checksum": "PLACEHOLDER",
+        "timestamp": "2026-03-11T00:00:00Z"
+      },
+      {
         "version": "2.2.5.0",
         "changelog": "Improved gradient visibility:\n- Added Gradient Opacity setting (50-100%)\n- Increased default gradient height to 40%\n- Badges now have better contrast against the gradient",
         "targetAbi": "10.11.0.0",

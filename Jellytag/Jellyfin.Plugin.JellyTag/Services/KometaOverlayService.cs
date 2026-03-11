@@ -184,23 +184,36 @@ public class KometaOverlayService : IDisposable
         if (config.EnableGradient)
         {
             var isTop = config.GradientPosition.Equals("Top", StringComparison.OrdinalIgnoreCase);
-            var gradient = await GetGradientAsync(isMovie, isTop).ConfigureAwait(false);
-            if (gradient != null)
-            {
-                // Scale gradient to match image width, position at top or bottom
-                var gradientHeight = (int)(sourceImage.Height * config.GradientHeightPercent / 100f);
-                var yPosition = isTop ? 0 : sourceImage.Height - gradientHeight;
-                var destRect = SKRect.Create(0, yPosition, sourceImage.Width, gradientHeight);
+            var gradientHeight = (int)(sourceImage.Height * config.GradientHeightPercent / 100f);
+            var opacity = (byte)(255 * Math.Clamp(config.GradientOpacity / 100f, 0f, 1f));
 
-                // Apply opacity to the gradient
-                var opacity = (byte)(255 * Math.Clamp(config.GradientOpacity / 100f, 0f, 1f));
-                using var paint = new SKPaint
-                {
-                    IsAntialias = true,
-                    Color = new SKColor(255, 255, 255, opacity)
-                };
-                canvas.DrawBitmap(gradient, destRect, paint);
+            // Create a programmatic gradient from transparent to black
+            SKPoint startPoint, endPoint;
+            if (isTop)
+            {
+                // Top gradient: black at top, transparent at bottom
+                startPoint = new SKPoint(0, 0);
+                endPoint = new SKPoint(0, gradientHeight);
             }
+            else
+            {
+                // Bottom gradient: transparent at top of gradient area, black at bottom
+                startPoint = new SKPoint(0, sourceImage.Height - gradientHeight);
+                endPoint = new SKPoint(0, sourceImage.Height);
+            }
+
+            var colors = new SKColor[]
+            {
+                isTop ? new SKColor(0, 0, 0, opacity) : SKColors.Transparent,
+                isTop ? SKColors.Transparent : new SKColor(0, 0, 0, opacity)
+            };
+
+            using var shader = SKShader.CreateLinearGradient(startPoint, endPoint, colors, SKShaderTileMode.Clamp);
+            using var paint = new SKPaint { Shader = shader, IsAntialias = true };
+
+            var yPosition = isTop ? 0 : sourceImage.Height - gradientHeight;
+            var rect = SKRect.Create(0, yPosition, sourceImage.Width, gradientHeight);
+            canvas.DrawRect(rect, paint);
         }
 
         // Calculate badge positions based on position setting
