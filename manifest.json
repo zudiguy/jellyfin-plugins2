@@ -9,6 +9,14 @@
     "imageUrl": "https://raw.githubusercontent.com/zudiguy/jellyfin-plugins2/main/Jellytag/Jellyfin.Plugin.JellyTag/JellyTag.png",
     "versions": [
       {
+        "version": "2.2.8.0",
+        "changelog": "Improved gradient:\n- Gradient now has solid black section where badges are placed\n- Fade only in upper portion of gradient area",
+        "targetAbi": "10.11.0.0",
+        "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.8.0/jellytag-2.2.8.0.zip",
+        "checksum": "PLACEHOLDER",
+        "timestamp": "2026-03-11T00:00:00Z"
+      },
+      {
         "version": "2.2.7.0",
         "changelog": "UI improvement:\n- Gradient Height and Opacity sliders now range from 0-100%",
         "targetAbi": "10.11.0.0",

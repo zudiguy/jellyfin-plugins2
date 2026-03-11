@@ -186,29 +186,31 @@ public class KometaOverlayService : IDisposable
             var isTop = config.GradientPosition.Equals("Top", StringComparison.OrdinalIgnoreCase);
             var gradientHeight = (int)(sourceImage.Height * config.GradientHeightPercent / 100f);
             var opacity = (byte)(255 * Math.Clamp(config.GradientOpacity / 100f, 0f, 1f));
+            var black = new SKColor(0, 0, 0, opacity);
 
-            // Create a programmatic gradient from transparent to black
+            // Create gradient with solid black section where badges are, then fade to transparent
             SKPoint startPoint, endPoint;
+            SKColor[] colors;
+            float[] positions;
+
             if (isTop)
             {
-                // Top gradient: black at top, transparent at bottom
+                // Top gradient: solid black at top, then fade to transparent
                 startPoint = new SKPoint(0, 0);
                 endPoint = new SKPoint(0, gradientHeight);
+                colors = new SKColor[] { black, black, SKColors.Transparent };
+                positions = new float[] { 0f, 0.4f, 1f }; // 40% solid black, 60% fade
             }
             else
             {
-                // Bottom gradient: transparent at top of gradient area, black at bottom
+                // Bottom gradient: fade from transparent, then solid black at bottom
                 startPoint = new SKPoint(0, sourceImage.Height - gradientHeight);
                 endPoint = new SKPoint(0, sourceImage.Height);
+                colors = new SKColor[] { SKColors.Transparent, black, black };
+                positions = new float[] { 0f, 0.6f, 1f }; // 60% fade, 40% solid black
             }
 
-            var colors = new SKColor[]
-            {
-                isTop ? new SKColor(0, 0, 0, opacity) : SKColors.Transparent,
-                isTop ? SKColors.Transparent : new SKColor(0, 0, 0, opacity)
-            };
-
-            using var shader = SKShader.CreateLinearGradient(startPoint, endPoint, colors, SKShaderTileMode.Clamp);
+            using var shader = SKShader.CreateLinearGradient(startPoint, endPoint, colors, positions, SKShaderTileMode.Clamp);
             using var paint = new SKPaint { Shader = shader, IsAntialias = true };
 
             var yPosition = isTop ? 0 : sourceImage.Height - gradientHeight;
