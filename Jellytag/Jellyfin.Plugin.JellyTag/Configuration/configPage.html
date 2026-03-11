@@ -71,6 +71,13 @@
                                 <span>Enable JellyTag</span>
                             </label>
                         </div>
+                        <div class="checkboxContainer checkboxContainer-withDescription" style="margin-top: 1em;">
+                            <label class="emby-checkbox-label">
+                                <input id="UseKometaStyle" type="checkbox" is="emby-checkbox" />
+                                <span>Use Gradient Overlay Style</span>
+                            </label>
+                            <div class="fieldDescription">Enable Kometa-style gradient overlays with combined badges and ratings. Different gradients are applied for Movies vs TV Shows.</div>
+                        </div>
                     </div>
 
                     <!-- Libraries -->
@@ -749,6 +756,7 @@
 
         function collectConfigFromForm(config) {
             config.Enabled = q('Enabled').checked;
+            config.UseKometaStyle = q('UseKometaStyle').checked;
             config.ThumbnailSameAsPoster = q('ThumbnailSameAsPoster').checked;
             config.ThumbnailSizeReduction = parseInt(q('ThumbnailSizeReduction').value, 10) || 0;
             config.PosterConfig = collectImageTypeConfig('Poster');
@@ -894,6 +902,7 @@
             Dashboard.showLoadingMsg();
             ApiClient.getPluginConfiguration(JellyTagConfig.pluginUniqueId).then(function(config) {
                 q('Enabled').checked = config.Enabled;
+                q('UseKometaStyle').checked = config.UseKometaStyle === true;
                 q('ThumbnailSameAsPoster').checked = config.ThumbnailSameAsPoster === true;
                 q('ThumbnailSizeReduction').value = config.ThumbnailSizeReduction != null ? config.ThumbnailSizeReduction : 10;
 
