@@ -13,7 +13,7 @@
         "changelog": "Improved gradient visibility:\n- Added Gradient Opacity setting (50-100%)\n- Increased default gradient height to 40%\n- Badges now have better contrast against the gradient",
         "targetAbi": "10.11.0.0",
         "sourceUrl": "https://github.com/zudiguy/jellyfin-plugins2/releases/download/jellytag-2.2.5.0/jellytag-2.2.5.0.zip",
-        "checksum": "PLACEHOLDER",
+        "checksum": "e0eef4536f43a04047662db33d4140fa",
         "timestamp": "2026-03-11T00:00:00Z"
       },
       {
