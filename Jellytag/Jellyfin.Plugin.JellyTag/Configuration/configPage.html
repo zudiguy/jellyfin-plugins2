@@ -89,6 +89,90 @@
                         </div>
                     </details>
 
+                    <!-- Gradient Overlay Settings -->
+                    <details class="jellytag-section" id="KometaSettingsSection">
+                        <summary>Gradient Overlay Settings</summary>
+                        <div class="jellytag-section-body">
+                            <div class="fieldDescription" style="margin-bottom:1em;">Configure the gradient overlay style. These settings only apply when "Use Gradient Overlay Style" is enabled above.</div>
+
+                            <h4 style="margin: 1em 0 0.5em;">Gradient</h4>
+                            <div class="checkboxContainer checkboxContainer-withDescription">
+                                <label class="emby-checkbox-label">
+                                    <input id="KometaEnableGradient" type="checkbox" is="emby-checkbox" />
+                                    <span>Enable Gradient Background</span>
+                                </label>
+                                <div class="fieldDescription">Apply a gradient overlay at the bottom of posters (different for Movies vs TV).</div>
+                            </div>
+                            <div class="inputContainer" style="max-width: 200px;">
+                                <label class="inputLabel inputLabelUnfocused" for="KometaGradientHeightPercent">Gradient Height (%)</label>
+                                <input id="KometaGradientHeightPercent" type="number" min="5" max="50" step="1" is="emby-input" />
+                                <div class="fieldDescription">Height of gradient as percentage of image height.</div>
+                            </div>
+
+                            <h4 style="margin: 1.5em 0 0.5em;">Badges</h4>
+                            <div class="jellytag-grid">
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input id="KometaEnableResolutionBadge" type="checkbox" is="emby-checkbox" />
+                                        <span>Show Resolution Badge</span>
+                                    </label>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input id="KometaEnableCodecBadge" type="checkbox" is="emby-checkbox" />
+                                        <span>Show Codec/HDR Badge</span>
+                                    </label>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input id="KometaEnableRatingBadge" type="checkbox" is="emby-checkbox" />
+                                        <span>Show Rating Badge</span>
+                                    </label>
+                                </div>
+                                <div class="checkboxContainer">
+                                    <label class="emby-checkbox-label">
+                                        <input id="KometaShowRatingNumber" type="checkbox" is="emby-checkbox" />
+                                        <span>Show Rating Number</span>
+                                    </label>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 1.5em 0 0.5em;">Badge Sizes</h4>
+                            <div class="jellytag-grid">
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaBadgeSizePercent">Badge Size (%)</label>
+                                    <input id="KometaBadgeSizePercent" type="number" min="3" max="20" step="0.5" is="emby-input" />
+                                    <div class="fieldDescription">Resolution/Codec badge size.</div>
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaRatingBadgeSizePercent">Rating Badge Size (%)</label>
+                                    <input id="KometaRatingBadgeSizePercent" type="number" min="3" max="20" step="0.5" is="emby-input" />
+                                    <div class="fieldDescription">Rating badge size.</div>
+                                </div>
+                            </div>
+
+                            <h4 style="margin: 1.5em 0 0.5em;">Margins & Spacing</h4>
+                            <div class="jellytag-grid">
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaBadgeBottomMarginPercent">Bottom Margin (%)</label>
+                                    <input id="KometaBadgeBottomMarginPercent" type="number" min="0" max="20" step="0.5" is="emby-input" />
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaBadgeLeftMarginPercent">Left Margin (%)</label>
+                                    <input id="KometaBadgeLeftMarginPercent" type="number" min="0" max="20" step="0.5" is="emby-input" />
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaBadgeRightMarginPercent">Right Margin (%)</label>
+                                    <input id="KometaBadgeRightMarginPercent" type="number" min="0" max="20" step="0.5" is="emby-input" />
+                                </div>
+                                <div class="inputContainer">
+                                    <label class="inputLabel inputLabelUnfocused" for="KometaBadgeGapPercent">Badge Gap (%)</label>
+                                    <input id="KometaBadgeGapPercent" type="number" min="0" max="10" step="0.5" is="emby-input" />
+                                </div>
+                            </div>
+                        </div>
+                    </details>
+
                     <!-- Posters (Primary) -->
                     <details class="jellytag-section" open>
                         <summary>Posters (Primary)</summary>
@@ -758,6 +842,22 @@
             config.Enabled = q('Enabled').checked;
             config.UseKometaStyle = q('UseKometaStyle').checked;
             config.ThumbnailSameAsPoster = q('ThumbnailSameAsPoster').checked;
+
+            // Collect KometaConfig settings
+            config.KometaConfig = {
+                EnableGradient: q('KometaEnableGradient').checked,
+                GradientHeightPercent: parseFloat(q('KometaGradientHeightPercent').value) || 25,
+                EnableResolutionBadge: q('KometaEnableResolutionBadge').checked,
+                EnableCodecBadge: q('KometaEnableCodecBadge').checked,
+                EnableRatingBadge: q('KometaEnableRatingBadge').checked,
+                ShowRatingNumber: q('KometaShowRatingNumber').checked,
+                BadgeSizePercent: parseFloat(q('KometaBadgeSizePercent').value) || 8,
+                RatingBadgeSizePercent: parseFloat(q('KometaRatingBadgeSizePercent').value) || 10,
+                BadgeBottomMarginPercent: parseFloat(q('KometaBadgeBottomMarginPercent').value) || 3,
+                BadgeLeftMarginPercent: parseFloat(q('KometaBadgeLeftMarginPercent').value) || 3,
+                BadgeRightMarginPercent: parseFloat(q('KometaBadgeRightMarginPercent').value) || 3,
+                BadgeGapPercent: parseFloat(q('KometaBadgeGapPercent').value) || 2
+            };
             config.ThumbnailSizeReduction = parseInt(q('ThumbnailSizeReduction').value, 10) || 0;
             config.PosterConfig = collectImageTypeConfig('Poster');
             config.ThumbnailConfig = collectImageTypeConfig('Thumb');
@@ -904,6 +1004,21 @@
                 q('Enabled').checked = config.Enabled;
                 q('UseKometaStyle').checked = config.UseKometaStyle === true;
                 q('ThumbnailSameAsPoster').checked = config.ThumbnailSameAsPoster === true;
+
+                // Load KometaConfig settings
+                var kc = config.KometaConfig || {};
+                q('KometaEnableGradient').checked = kc.EnableGradient !== false;
+                q('KometaGradientHeightPercent').value = kc.GradientHeightPercent != null ? kc.GradientHeightPercent : 25;
+                q('KometaEnableResolutionBadge').checked = kc.EnableResolutionBadge !== false;
+                q('KometaEnableCodecBadge').checked = kc.EnableCodecBadge !== false;
+                q('KometaEnableRatingBadge').checked = kc.EnableRatingBadge !== false;
+                q('KometaShowRatingNumber').checked = kc.ShowRatingNumber !== false;
+                q('KometaBadgeSizePercent').value = kc.BadgeSizePercent != null ? kc.BadgeSizePercent : 8;
+                q('KometaRatingBadgeSizePercent').value = kc.RatingBadgeSizePercent != null ? kc.RatingBadgeSizePercent : 10;
+                q('KometaBadgeBottomMarginPercent').value = kc.BadgeBottomMarginPercent != null ? kc.BadgeBottomMarginPercent : 3;
+                q('KometaBadgeLeftMarginPercent').value = kc.BadgeLeftMarginPercent != null ? kc.BadgeLeftMarginPercent : 3;
+                q('KometaBadgeRightMarginPercent').value = kc.BadgeRightMarginPercent != null ? kc.BadgeRightMarginPercent : 3;
+                q('KometaBadgeGapPercent').value = kc.BadgeGapPercent != null ? kc.BadgeGapPercent : 2;
                 q('ThumbnailSizeReduction').value = config.ThumbnailSizeReduction != null ? config.ThumbnailSizeReduction : 10;
 
                 loadImageTypeConfig('Poster', config.PosterConfig || {});
